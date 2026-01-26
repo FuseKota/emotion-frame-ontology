@@ -1,0 +1,16 @@
+# Query 4: Emotions with impediments
+# Impediments are factors that block or hinder an emotion
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX be: <http://www.ontologydesignpatterns.org/ont/emotions/BasicEmotions.owl#>
+
+SELECT DISTINCT ?emotion ?impediment
+WHERE {
+    ?emotion rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty be:hasImpediment ;
+        owl:someValuesFrom ?impediment
+    ] .
+}
+ORDER BY ?emotion

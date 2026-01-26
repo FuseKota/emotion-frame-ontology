@@ -1,0 +1,17 @@
+# Query 2: Emotion intensity relations (moreIntenseThan / lessIntenseThan)
+# This retrieves the intensity hierarchy between emotions
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX be: <http://www.ontologydesignpatterns.org/ont/emotions/BasicEmotions.owl#>
+
+# Part A: moreIntenseThan relations (via restrictions)
+SELECT DISTINCT ?strongerEmotion ?weakerEmotion
+WHERE {
+    ?strongerEmotion rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty be:moreIntenseThan ;
+        owl:someValuesFrom ?weakerEmotion
+    ] .
+}
+ORDER BY ?strongerEmotion

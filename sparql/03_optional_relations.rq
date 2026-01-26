@@ -1,0 +1,17 @@
+# Query 3: Optional relations - hasAntidote, hasImpediment, hasPreCondition
+# These relations capture therapeutic/regulatory aspects of emotions
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX be: <http://www.ontologydesignpatterns.org/ont/emotions/BasicEmotions.owl#>
+
+# Emotions with their antidotes
+SELECT DISTINCT ?emotion ?antidote
+WHERE {
+    ?emotion rdfs:subClassOf [
+        a owl:Restriction ;
+        owl:onProperty be:hasAntidote ;
+        owl:someValuesFrom ?antidote
+    ] .
+}
+ORDER BY ?emotion

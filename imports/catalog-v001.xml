@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2">
+        <!-- DUL (DOLCE-Ultralite) -->
+        <uri id="DUL" name="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl" uri="DUL.owl"/>
+
+        <!-- EmoCore -->
+        <uri id="EmoCore" name="http://www.ontologydesignpatterns.org/ont/emotions/EmoCore.owl" uri="../data/EmoCore_iswc.ttl"/>
+
+        <!-- BasicEmotions (EFO-BE) -->
+        <uri id="BasicEmotions" name="http://www.ontologydesignpatterns.org/ont/emotions/BasicEmotions.owl" uri="../data/BE_iswc.ttl"/>
+    </group>
+</catalog>

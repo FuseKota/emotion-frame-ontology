@@ -1,0 +1,19 @@
+# Query 5: Ontology statistics
+# Count classes, object properties, and individuals
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX be: <http://www.ontologydesignpatterns.org/ont/emotions/BasicEmotions.owl#>
+PREFIX emo: <http://www.ontologydesignpatterns.org/ont/emotions/EmoCore.owl#>
+
+SELECT
+    (COUNT(DISTINCT ?class) AS ?totalClasses)
+    (COUNT(DISTINCT ?prop) AS ?totalObjectProperties)
+    (COUNT(DISTINCT ?ind) AS ?totalIndividuals)
+WHERE {
+    { ?class a owl:Class . FILTER(STRSTARTS(STR(?class), "http://www.ontologydesignpatterns.org/ont/emotions/")) }
+    UNION
+    { ?prop a owl:ObjectProperty . FILTER(STRSTARTS(STR(?prop), "http://www.ontologydesignpatterns.org/ont/emotions/")) }
+    UNION
+    { ?ind a owl:NamedIndividual . FILTER(STRSTARTS(STR(?ind), "http://www.ontologydesignpatterns.org/ont/emotions/")) }
+}

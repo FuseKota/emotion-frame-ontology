@@ -1,0 +1,15 @@
+# Query 1: List all BE_Emotion subclasses (Basic Emotions and their sub-emotions)
+# This retrieves all emotion classes defined under BE_Emotion hierarchy
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX be: <http://www.ontologydesignpatterns.org/ont/emotions/BasicEmotions.owl#>
+PREFIX emo: <http://www.ontologydesignpatterns.org/ont/emotions/EmoCore.owl#>
+
+SELECT DISTINCT ?emotion ?label
+WHERE {
+    ?emotion rdfs:subClassOf* be:BE_Emotion .
+    ?emotion a owl:Class .
+    OPTIONAL { ?emotion rdfs:label ?label }
+}
+ORDER BY ?emotion
