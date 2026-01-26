@@ -3956,6 +3956,11 @@ pl:Awe a owl:Class ;
                         owl:onProperty pl:hasComponentEmotion ;
                         owl:someValuesFrom pl:Surprise ] ) ] .
 
+pl:EmotionSituation a owl:Class ;
+    rdfs:label "Emotion Situation" ;
+    rdfs:comment "Data instance where emotions are observed. Equivalent to fschema:FrameOccurrence for EFO compatibility." ;
+    owl:equivalentClass fschema:FrameOccurrence .
+
 pl:Optimism a owl:Class ;
     rdfs:label "Optimism" ;
     rdfs:comment "Primary dyad: Anticipation + Joy" ;

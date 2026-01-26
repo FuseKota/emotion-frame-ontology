@@ -73,8 +73,8 @@ pl:DyadEvidenceShape a sh:NodeShape ;
         sh:path pl:derivedFrom ;
         sh:minCount 2 ;
         sh:maxCount 2 ;
-        sh:nodeKind sh:BlankNodeOrIRI ;
-        sh:message "DyadEvidence must have exactly 2 pl:derivedFrom links" ;
+        sh:class pl:Evidence ;
+        sh:message "DyadEvidence must have exactly 2 pl:derivedFrom links to Evidence nodes" ;
     ] ;
 
     # Should have a method annotation

@@ -77,6 +77,12 @@ pl:method rdf:type owl:DatatypeProperty ;
 #    Classes
 #################################################################
 
+###  http://example.org/efo/plutchik#EmotionSituation
+pl:EmotionSituation rdf:type owl:Class ;
+    owl:equivalentClass fschema:FrameOccurrence ;
+    rdfs:comment "Data instance where emotions are observed. Equivalent to fschema:FrameOccurrence for EFO compatibility." ;
+    rdfs:label "Emotion Situation" .
+
 ###  http://example.org/efo/plutchik#Evidence
 pl:Evidence rdf:type owl:Class ;
     rdfs:comment "A node representing evidence for an emotion with an associated score." ;
