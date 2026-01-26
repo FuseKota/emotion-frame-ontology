@@ -1,0 +1,177 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix pl: <http://example.org/efo/plutchik#> .
+@prefix fschema: <https://w3id.org/framester/schema/> .
+
+# =============================================================================
+# SHACL Shapes for EFO-PlutchikDyad Module
+# Reference: EFO-PlutchikDyad paper, Appendix E
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Shape 1: Evidence Shape
+# Validates that all Evidence instances have required properties
+# -----------------------------------------------------------------------------
+pl:EvidenceShape a sh:NodeShape ;
+    sh:targetClass pl:Evidence ;
+    rdfs:label "Evidence Shape" ;
+    rdfs:comment "Validates basic Evidence structure" ;
+
+    # Must have exactly one emotion
+    sh:property [
+        sh:path pl:emotion ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "Evidence must have exactly one pl:emotion (IRI)" ;
+    ] ;
+
+    # Must have exactly one score
+    sh:property [
+        sh:path pl:score ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "Evidence must have exactly one pl:score (decimal between 0 and 1)" ;
+    ] .
+
+# -----------------------------------------------------------------------------
+# Shape 2: DyadEvidence Shape
+# Validates that DyadEvidence instances have provenance links
+# -----------------------------------------------------------------------------
+pl:DyadEvidenceShape a sh:NodeShape ;
+    sh:targetClass pl:DyadEvidence ;
+    rdfs:label "DyadEvidence Shape" ;
+    rdfs:comment "Validates DyadEvidence structure with provenance" ;
+
+    # Must have exactly one emotion (dyad)
+    sh:property [
+        sh:path pl:emotion ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:nodeKind sh:IRI ;
+        sh:message "DyadEvidence must have exactly one pl:emotion (IRI)" ;
+    ] ;
+
+    # Must have exactly one score
+    sh:property [
+        sh:path pl:score ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "DyadEvidence must have exactly one pl:score (decimal between 0 and 1)" ;
+    ] ;
+
+    # Must have exactly two derivedFrom links (provenance)
+    sh:property [
+        sh:path pl:derivedFrom ;
+        sh:minCount 2 ;
+        sh:maxCount 2 ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:message "DyadEvidence must have exactly 2 pl:derivedFrom links" ;
+    ] ;
+
+    # Should have a method annotation
+    sh:property [
+        sh:path pl:method ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "DyadEvidence should have exactly one pl:method annotation" ;
+        sh:severity sh:Warning ;
+    ] .
+
+# -----------------------------------------------------------------------------
+# Shape 3: FrameOccurrence with Evidence
+# Validates FrameOccurrence-Evidence linking pattern
+# -----------------------------------------------------------------------------
+pl:FrameOccurrenceWithEvidenceShape a sh:NodeShape ;
+    sh:targetClass fschema:FrameOccurrence ;
+    rdfs:label "FrameOccurrence with Evidence Shape" ;
+    rdfs:comment "Validates FrameOccurrence has evidence attached" ;
+
+    # Should have at least one evidence
+    sh:property [
+        sh:path pl:hasEvidence ;
+        sh:minCount 1 ;
+        sh:nodeKind sh:BlankNodeOrIRI ;
+        sh:message "FrameOccurrence should have at least one pl:hasEvidence link" ;
+        sh:severity sh:Warning ;
+    ] .
+
+# -----------------------------------------------------------------------------
+# Shape 4: Score Range Shape (applies to all score values)
+# Validates score values are within valid range
+# -----------------------------------------------------------------------------
+pl:ScoreRangeShape a sh:NodeShape ;
+    sh:targetSubjectsOf pl:score ;
+    rdfs:label "Score Range Shape" ;
+    rdfs:comment "Validates all pl:score values are within [0,1]" ;
+
+    sh:property [
+        sh:path pl:score ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "pl:score must be a decimal value between 0 and 1" ;
+    ] .
+
+# -----------------------------------------------------------------------------
+# Shape 5: Satisfies Relationship Shape
+# Validates that satisfies links point to PlutchikDyad subclasses
+# -----------------------------------------------------------------------------
+pl:SatisfiesShape a sh:NodeShape ;
+    sh:targetSubjectsOf pl:satisfies ;
+    rdfs:label "Satisfies Relationship Shape" ;
+    rdfs:comment "Validates pl:satisfies targets are PlutchikDyad classes" ;
+
+    sh:property [
+        sh:path pl:satisfies ;
+        sh:nodeKind sh:IRI ;
+        sh:message "pl:satisfies must link to a PlutchikDyad class (IRI)" ;
+    ] .
+
+# -----------------------------------------------------------------------------
+# Shape 6: Basic Emotion Evidence Shape
+# Validates basic emotions (non-dyad evidence)
+# -----------------------------------------------------------------------------
+pl:BasicEmotionEvidenceShape a sh:NodeShape ;
+    sh:target [
+        a sh:SPARQLTarget ;
+        sh:prefixes pl:PrefixDeclarations ;
+        sh:select """
+            SELECT ?this WHERE {
+                ?this a pl:Evidence .
+                FILTER NOT EXISTS { ?this a pl:DyadEvidence }
+            }
+        """ ;
+    ] ;
+    rdfs:label "Basic Emotion Evidence Shape" ;
+    rdfs:comment "Validates basic emotion evidence (not derived)" ;
+
+    # Should NOT have derivedFrom (basic emotions are not derived)
+    sh:property [
+        sh:path pl:derivedFrom ;
+        sh:maxCount 0 ;
+        sh:message "Basic emotion evidence should not have pl:derivedFrom links" ;
+        sh:severity sh:Warning ;
+    ] .
+
+# -----------------------------------------------------------------------------
+# Prefix declarations for SPARQL targets
+# -----------------------------------------------------------------------------
+pl:PrefixDeclarations a owl:Ontology ;
+    sh:declare [
+        sh:prefix "pl" ;
+        sh:namespace "http://example.org/efo/plutchik#"^^xsd:anyURI ;
+    ] ;
+    sh:declare [
+        sh:prefix "fschema" ;
+        sh:namespace "https://w3id.org/framester/schema/"^^xsd:anyURI ;
+    ] .

@@ -1,0 +1,30 @@
+# CQ2: Retrieve component emotions of a dyad
+# Reference: EFO-PlutchikDyad paper, Section VII (E1)
+#
+# Purpose: Retrieves the component emotions of a dyad via hasComponentEmotion
+
+PREFIX pl: <http://example.org/efo/plutchik#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+
+SELECT ?dyad ?dyadLabel ?component1 ?component2 WHERE {
+    ?dyad rdfs:subClassOf pl:PlutchikDyad .
+    ?dyad rdfs:label ?dyadLabel .
+
+    # Extract components from OWL equivalentClass restriction
+    ?dyad owl:equivalentClass ?equiv .
+    ?equiv owl:intersectionOf ?list .
+
+    # Get restrictions with someValuesFrom
+    ?list rdf:rest*/rdf:first ?restr1 .
+    ?restr1 owl:onProperty pl:hasComponentEmotion ;
+            owl:someValuesFrom ?component1 .
+
+    ?list rdf:rest*/rdf:first ?restr2 .
+    ?restr2 owl:onProperty pl:hasComponentEmotion ;
+            owl:someValuesFrom ?component2 .
+
+    FILTER (?component1 != ?component2)
+    FILTER (STR(?component1) < STR(?component2))
+}
+ORDER BY ?dyadLabel

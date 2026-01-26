@@ -1,0 +1,12 @@
+# CQ: Find DyadEvidence missing provenance completeness
+# Reference: EFO-PlutchikDyad paper, Appendix F
+#
+# Purpose: Quality check - finds DyadEvidence nodes without derivedFrom links
+
+PREFIX pl: <http://example.org/efo/plutchik#>
+
+SELECT ?dev WHERE {
+    ?dev a pl:DyadEvidence .
+    FILTER NOT EXISTS { ?dev pl:derivedFrom ?x . }
+}
+LIMIT 50

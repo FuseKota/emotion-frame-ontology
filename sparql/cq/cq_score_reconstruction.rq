@@ -1,0 +1,25 @@
+# CQ: Check min-score reconstruction for each DyadEvidence
+# Reference: EFO-PlutchikDyad paper, Appendix F
+#
+# Purpose: Verifies that dyadScore equals min(score1, score2)
+#          Returns only cases where there is a mismatch (should be empty)
+
+PREFIX pl: <http://example.org/efo/plutchik#>
+
+SELECT ?dev ?dyad ?dyadScore ?score1 ?score2 ?computedMin WHERE {
+    ?dev a pl:DyadEvidence ;
+        pl:emotion ?dyad ;
+        pl:score ?dyadScore ;
+        pl:derivedFrom ?e1, ?e2 .
+
+    ?e1 pl:score ?score1 .
+    ?e2 pl:score ?score2 .
+
+    FILTER (?e1 != ?e2)
+
+    BIND (IF(?score1 <= ?score2, ?score1, ?score2) AS ?computedMin)
+
+    # Only return mismatches
+    FILTER (?dyadScore != ?computedMin)
+}
+LIMIT 50

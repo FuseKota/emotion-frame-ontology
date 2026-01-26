@@ -1,0 +1,17 @@
+# CQ1: List inferred dyads and scores
+# Reference: EFO-PlutchikDyad paper, Appendix B
+#
+# Purpose: Lists all inferred dyads and their corresponding dyadScores for each situation
+
+PREFIX pl: <http://example.org/efo/plutchik#>
+PREFIX fschema: <https://w3id.org/framester/schema/>
+
+SELECT ?situation ?dyad ?score WHERE {
+    ?situation a fschema:FrameOccurrence ;
+        pl:satisfies ?dyad ;
+        pl:hasEvidence ?ev .
+    ?ev a pl:DyadEvidence ;
+        pl:emotion ?dyad ;
+        pl:score ?score .
+}
+ORDER BY ?situation ?dyad

@@ -1,0 +1,23 @@
+# (9) Hope = Anticipation + Trust
+PREFIX pl: <http://example.org/efo/plutchik#>
+PREFIX fschema: <https://w3id.org/framester/schema/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+CONSTRUCT {
+    ?s pl:satisfies pl:Hope .
+    ?s pl:hasEvidence ?evDy .
+    ?evDy a pl:DyadEvidence ;
+        pl:emotion pl:Hope ;
+        pl:score ?minScore ;
+        pl:method "min-threshold" ;
+        pl:derivedFrom ?ev1, ?ev2 .
+}
+WHERE {
+    ?s a fschema:FrameOccurrence ;
+        pl:hasEvidence ?ev1, ?ev2 .
+    ?ev1 pl:emotion pl:Anticipation ; pl:score ?a .
+    ?ev2 pl:emotion pl:Trust ; pl:score ?b .
+    FILTER (?a >= 0.4 && ?b >= 0.4)
+    BIND (IF(?a <= ?b, ?a, ?b) AS ?minScore)
+    BIND (BNODE() AS ?evDy)
+}

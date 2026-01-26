@@ -1,0 +1,28 @@
+# CQ4: Confirm no dyad is inferred when one component score falls below threshold
+# Reference: EFO-PlutchikDyad paper, Section VII (E1)
+#
+# Purpose: Finds situations that have basic emotion evidence but no inferred dyad
+#          (useful for verifying threshold behavior)
+
+PREFIX pl: <http://example.org/efo/plutchik#>
+PREFIX fschema: <https://w3id.org/framester/schema/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?situation ?label ?emotion ?score WHERE {
+    ?situation a fschema:FrameOccurrence .
+    OPTIONAL { ?situation rdfs:label ?label }
+
+    # Has basic emotion evidence
+    ?situation pl:hasEvidence ?ev .
+    ?ev pl:emotion ?emotion ; pl:score ?score .
+
+    # But no dyad is satisfied
+    FILTER NOT EXISTS {
+        ?situation pl:satisfies ?dyad .
+        ?dyad rdfs:subClassOf pl:PlutchikDyad .
+    }
+
+    # Only basic emotions (not DyadEvidence)
+    FILTER NOT EXISTS { ?ev a pl:DyadEvidence }
+}
+ORDER BY ?situation ?emotion

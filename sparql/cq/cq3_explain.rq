@@ -1,0 +1,25 @@
+# CQ3: Explain an inferred dyad via provenance
+# Reference: EFO-PlutchikDyad paper, Appendix B
+#
+# Purpose: Explains an inferred dyad by following derivedFrom links
+#          and reconstructing the min operation
+
+PREFIX pl: <http://example.org/efo/plutchik#>
+PREFIX fschema: <https://w3id.org/framester/schema/>
+
+SELECT ?situation ?dyad ?dyadScore ?emotion1 ?score1 ?emotion2 ?score2 WHERE {
+    ?situation a fschema:FrameOccurrence ;
+        pl:hasEvidence ?dyadEv .
+
+    ?dyadEv a pl:DyadEvidence ;
+        pl:emotion ?dyad ;
+        pl:score ?dyadScore ;
+        pl:derivedFrom ?ev1, ?ev2 .
+
+    ?ev1 pl:emotion ?emotion1 ; pl:score ?score1 .
+    ?ev2 pl:emotion ?emotion2 ; pl:score ?score2 .
+
+    FILTER (?ev1 != ?ev2)
+    FILTER (STR(?emotion1) < STR(?emotion2))
+}
+ORDER BY ?situation
