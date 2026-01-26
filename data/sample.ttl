@@ -1,0 +1,102 @@
+@prefix ex: <http://example.org/data#> .
+@prefix pl: <http://example.org/efo/plutchik#> .
+@prefix emo: <http://www.ontologydesignpatterns.org/ont/emotions/EmoCore.owl#> .
+@prefix fschema: <https://w3id.org/framester/schema/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Sample data for Plutchik Dyad inference testing
+# Each FrameOccurrence has 2 EmotionEvidence nodes with scores
+
+#################################################################
+# ex:s1 - Expected: Love (Joy + Trust), score=min(0.80, 0.70)=0.70
+#################################################################
+ex:s1 rdf:type fschema:FrameOccurrence ;
+    rdfs:label "Situation 1: Love scenario" ;
+    pl:hasEvidence ex:s1_ev_joy , ex:s1_ev_trust .
+
+ex:s1_ev_joy rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Joy ;
+    pl:score "0.80"^^xsd:decimal .
+
+ex:s1_ev_trust rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Trust ;
+    pl:score "0.70"^^xsd:decimal .
+
+#################################################################
+# ex:s2 - Expected: Contempt (Disgust + Anger), score=min(0.60, 0.60)=0.60
+#################################################################
+ex:s2 rdf:type fschema:FrameOccurrence ;
+    rdfs:label "Situation 2: Contempt scenario" ;
+    pl:hasEvidence ex:s2_ev_disgust , ex:s2_ev_anger .
+
+ex:s2_ev_disgust rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Disgust ;
+    pl:score "0.60"^^xsd:decimal .
+
+ex:s2_ev_anger rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Anger ;
+    pl:score "0.60"^^xsd:decimal .
+
+#################################################################
+# ex:s3 - Expected: Aggressiveness (Anger + Anticipation), score=min(0.90, 0.50)=0.50
+#################################################################
+ex:s3 rdf:type fschema:FrameOccurrence ;
+    rdfs:label "Situation 3: Aggressiveness scenario" ;
+    pl:hasEvidence ex:s3_ev_anger , ex:s3_ev_anticipation .
+
+ex:s3_ev_anger rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Anger ;
+    pl:score "0.90"^^xsd:decimal .
+
+ex:s3_ev_anticipation rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Anticipation ;
+    pl:score "0.50"^^xsd:decimal .
+
+#################################################################
+# ex:s4 - Expected: Disapproval (Surprise + Sadness), score=min(0.60, 0.45)=0.45
+#################################################################
+ex:s4 rdf:type fschema:FrameOccurrence ;
+    rdfs:label "Situation 4: Disapproval scenario" ;
+    pl:hasEvidence ex:s4_ev_surprise , ex:s4_ev_sadness .
+
+ex:s4_ev_surprise rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Surprise ;
+    pl:score "0.60"^^xsd:decimal .
+
+ex:s4_ev_sadness rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Sadness ;
+    pl:score "0.45"^^xsd:decimal .
+
+#################################################################
+# ex:s5 - Expected: Hope (Anticipation + Trust), score=min(0.42, 0.41)=0.41
+#################################################################
+ex:s5 rdf:type fschema:FrameOccurrence ;
+    rdfs:label "Situation 5: Hope scenario (boundary case)" ;
+    pl:hasEvidence ex:s5_ev_anticipation , ex:s5_ev_trust .
+
+ex:s5_ev_anticipation rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Anticipation ;
+    pl:score "0.42"^^xsd:decimal .
+
+ex:s5_ev_trust rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Trust ;
+    pl:score "0.41"^^xsd:decimal .
+
+#################################################################
+# ex:s6 - Expected: NO dyad inferred (Fear=0.39 < TH=0.4)
+# Awe = Fear + Surprise, but Fear score is below threshold
+#################################################################
+ex:s6 rdf:type fschema:FrameOccurrence ;
+    rdfs:label "Situation 6: Threshold test (no dyad expected)" ;
+    pl:hasEvidence ex:s6_ev_fear , ex:s6_ev_surprise .
+
+ex:s6_ev_fear rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Fear ;
+    pl:score "0.39"^^xsd:decimal .
+
+ex:s6_ev_surprise rdf:type pl:EmotionEvidence ;
+    pl:emotion pl:Surprise ;
+    pl:score "0.80"^^xsd:decimal .

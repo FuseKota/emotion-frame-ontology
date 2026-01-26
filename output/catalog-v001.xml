@@ -2,7 +2,7 @@
 <catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
     <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2">
         <!-- DUL (DOLCE-Ultralite) -->
-        <uri id="DUL" name="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl" uri="DUL.owl"/>
+        <uri id="DUL" name="http://www.ontologydesignpatterns.org/ont/dul/DUL.owl" uri="../imports/DUL.owl"/>
 
         <!-- EmoCore -->
         <uri id="EmoCore" name="http://www.ontologydesignpatterns.org/ont/emotions/EmoCore.owl" uri="../data/EmoCore_iswc.ttl"/>
@@ -12,5 +12,8 @@
 
         <!-- Plutchik Dyad Module -->
         <uri id="PlutchikDyad" name="http://example.org/efo/plutchik" uri="../modules/EFO-PlutchikDyad.ttl"/>
+
+        <!-- Inference Output -->
+        <uri id="InferenceOutput" name="http://example.org/efo/plutchik/inference" uri="out.ttl"/>
     </group>
 </catalog>

@@ -162,18 +162,102 @@ The following IRIs are referenced in the ontologies but not explicitly imported:
 
 These do not require local copies for basic functionality.
 
+## Plutchik Dyad Module
+
+An extension module that implements Plutchik's wheel of emotions theory for compound emotion (dyad) inference.
+
+### Overview
+
+The Plutchik Dyad module (`modules/EFO-PlutchikDyad.ttl`) defines:
+- **8 Basic Emotions**: Joy, Trust, Fear, Surprise, Sadness, Disgust, Anger, Anticipation
+- **10 Dyads** (compound emotions): Love, Submission, Awe, Disapproval, Remorse, Contempt, Aggressiveness, Optimism, Hope, Pride
+
+### Dyad Definitions
+
+| Dyad | Components | Type |
+|------|------------|------|
+| Love | Joy + Trust | Primary |
+| Submission | Trust + Fear | Primary |
+| Awe | Fear + Surprise | Primary |
+| Disapproval | Surprise + Sadness | Primary |
+| Remorse | Sadness + Disgust | Primary |
+| Contempt | Disgust + Anger | Primary |
+| Aggressiveness | Anger + Anticipation | Primary |
+| Optimism | Anticipation + Joy | Primary |
+| Hope | Anticipation + Trust | Secondary |
+| Pride | Anger + Joy | Secondary |
+
+### Running Dyad Inference
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run inference with default threshold (0.4)
+python scripts/run_inference.py --out output/out.ttl
+
+# Run with custom threshold
+python scripts/run_inference.py --th 0.5 --out output/out.ttl
+```
+
+### Inference Algorithm
+
+1. For each `FrameOccurrence`, collect all `EmotionEvidence` nodes
+2. For each dyad, check if both component emotions have evidence above threshold
+3. If yes, compute `dyadScore = min(score1, score2)`
+4. Materialize:
+   - `FrameOccurrence pl:satisfiesEmotion Dyad`
+   - New `EmotionEvidence` with score, derivedFrom, and inferenceMethod
+
+### Expected Results (sample.ttl)
+
+| Situation | Evidence | Expected Dyad | Score |
+|-----------|----------|---------------|-------|
+| ex:s1 | Joy=0.80, Trust=0.70 | Love | 0.70 |
+| ex:s2 | Disgust=0.60, Anger=0.60 | Contempt | 0.60 |
+| ex:s3 | Anger=0.90, Anticipation=0.50 | Aggressiveness | 0.50 |
+| ex:s4 | Surprise=0.60, Sadness=0.45 | Disapproval | 0.45 |
+| ex:s5 | Anticipation=0.42, Trust=0.41 | Hope | 0.41 |
+| ex:s6 | Fear=0.39, Surprise=0.80 | (none) | - |
+
+Note: ex:s6 has Fear below threshold (0.39 < 0.4), so Awe is not inferred.
+
+### Viewing Results in Protege
+
+1. Open Protege
+2. Load all files:
+   - `data/EmoCore_iswc.ttl`
+   - `modules/EFO-PlutchikDyad.ttl`
+   - `data/sample.ttl`
+   - `output/out.ttl`
+3. Navigate to Individuals to see inferred `EmotionEvidence` nodes with `pl:satisfiesEmotion` relations
+
+### Module Namespaces
+
+| Prefix | IRI |
+|--------|-----|
+| `pl:` | `http://example.org/efo/plutchik#` |
+| `emo:` | `http://www.ontologydesignpatterns.org/ont/emotions/EmoCore.owl#` |
+| `ex:` | `http://example.org/data#` |
+
 ## Directory Structure
 
 ```
 efo_repro/
 ├── README.md
+├── requirements.txt              # Python dependencies
 ├── data/
 │   ├── EmoCore_iswc.ttl          # Core emotion vocabulary
 │   ├── BE_iswc.ttl               # Basic Emotions module (EFO-BE)
-│   └── BasicEmotionTriggers_iswc.ttl  # Trigger patterns
+│   ├── BasicEmotionTriggers_iswc.ttl  # Trigger patterns
+│   └── sample.ttl                # Sample data for dyad inference
 ├── imports/
 │   ├── DUL.owl                   # DOLCE-Ultralite
 │   └── catalog-v001.xml          # Protege IRI resolution
+├── modules/
+│   └── EFO-PlutchikDyad.ttl      # Plutchik Dyad extension module
+├── output/
+│   └── out.ttl                   # Inference output (generated)
 ├── sparql/
 │   ├── 01_list_be_emotions.rq
 │   ├── 02_intensity_relations.rq
@@ -183,7 +267,8 @@ efo_repro/
 └── scripts/
     ├── download.sh               # Download all ontologies
     ├── extract_imports.py        # Analyze owl:imports
-    └── run_fuseki.sh             # Fuseki management
+    ├── run_fuseki.sh             # Fuseki management
+    └── run_inference.py          # Plutchik dyad inference
 ```
 
 ## References
@@ -192,3 +277,4 @@ efo_repro/
 - GitHub: https://github.com/StenDoipanni/EFO
 - Atlas of Emotions: http://atlasofemotions.org
 - DOLCE-Ultralite: http://www.ontologydesignpatterns.org/ont/dul/DUL.owl
+- Plutchik's Wheel of Emotions: https://en.wikipedia.org/wiki/Robert_Plutchik

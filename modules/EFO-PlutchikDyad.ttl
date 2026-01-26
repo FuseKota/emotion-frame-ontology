@@ -1,0 +1,287 @@
+@prefix : <http://example.org/efo/plutchik#> .
+@prefix pl: <http://example.org/efo/plutchik#> .
+@prefix emo: <http://www.ontologydesignpatterns.org/ont/emotions/EmoCore.owl#> .
+@prefix fschema: <https://w3id.org/framester/schema/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <http://example.org/efo/plutchik> .
+
+<http://example.org/efo/plutchik> rdf:type owl:Ontology ;
+    rdfs:comment """Plutchik Dyad module for EFO. Defines 8 basic emotions and 10 dyads (compound emotions) based on Plutchik's wheel of emotions theory.
+
+Note: This module depends on EmoCore. Load EmoCore_iswc.ttl before or alongside this file.""" ;
+    rdfs:label "EFO-PlutchikDyad" ;
+    owl:versionInfo "1.0" .
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://example.org/efo/plutchik#hasComponentEmotion
+pl:hasComponentEmotion rdf:type owl:ObjectProperty ;
+    rdfs:domain pl:PlutchikDyad ;
+    rdfs:range pl:PlutchikBasicEmotion ;
+    rdfs:comment "Links a dyad (compound emotion) to its component basic emotions." ;
+    rdfs:label "has component emotion" .
+
+###  http://example.org/efo/plutchik#hasEvidence
+pl:hasEvidence rdf:type owl:ObjectProperty ;
+    rdfs:domain fschema:FrameOccurrence ;
+    rdfs:range pl:EmotionEvidence ;
+    rdfs:comment "Links a FrameOccurrence to an EmotionEvidence node." ;
+    rdfs:label "has evidence" .
+
+###  http://example.org/efo/plutchik#emotion
+pl:emotion rdf:type owl:ObjectProperty ;
+    rdfs:domain pl:EmotionEvidence ;
+    rdfs:range emo:Emotion ;
+    rdfs:comment "Links an EmotionEvidence to the emotion it evidences." ;
+    rdfs:label "emotion" .
+
+###  http://example.org/efo/plutchik#derivedFrom
+pl:derivedFrom rdf:type owl:ObjectProperty ;
+    rdfs:domain pl:EmotionEvidence ;
+    rdfs:range pl:EmotionEvidence ;
+    rdfs:comment "Links a derived (inferred) EmotionEvidence to its source evidence nodes." ;
+    rdfs:label "derived from" .
+
+###  http://example.org/efo/plutchik#satisfiesEmotion
+pl:satisfiesEmotion rdf:type owl:ObjectProperty ;
+    rdfs:domain fschema:FrameOccurrence ;
+    rdfs:range emo:Emotion ;
+    rdfs:comment "Indicates that a FrameOccurrence satisfies (exhibits) an emotion based on inference." ;
+    rdfs:label "satisfies emotion" .
+
+#################################################################
+#    Datatype Properties
+#################################################################
+
+###  http://example.org/efo/plutchik#score
+pl:score rdf:type owl:DatatypeProperty ;
+    rdfs:domain pl:EmotionEvidence ;
+    rdfs:range xsd:decimal ;
+    rdfs:comment "The confidence/intensity score of the emotion evidence (0.0 to 1.0)." ;
+    rdfs:label "score" .
+
+###  http://example.org/efo/plutchik#inferenceMethod
+pl:inferenceMethod rdf:type owl:DatatypeProperty ;
+    rdfs:domain pl:EmotionEvidence ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Describes the method used to infer this evidence (e.g., 'min-threshold-0.4')." ;
+    rdfs:label "inference method" .
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://example.org/efo/plutchik#EmotionEvidence
+pl:EmotionEvidence rdf:type owl:Class ;
+    rdfs:comment "A node representing evidence for an emotion with an associated score." ;
+    rdfs:label "Emotion Evidence" .
+
+###  http://example.org/efo/plutchik#PlutchikBasicEmotion
+pl:PlutchikBasicEmotion rdf:type owl:Class ;
+    rdfs:subClassOf emo:Emotion ;
+    rdfs:comment "One of the 8 basic emotions in Plutchik's wheel of emotions." ;
+    rdfs:label "Plutchik Basic Emotion" .
+
+###  http://example.org/efo/plutchik#PlutchikDyad
+pl:PlutchikDyad rdf:type owl:Class ;
+    rdfs:subClassOf emo:Emotion ;
+    rdfs:comment "A compound emotion (dyad) formed by combining two adjacent basic emotions in Plutchik's wheel." ;
+    rdfs:label "Plutchik Dyad" .
+
+#################################################################
+#    8 Basic Emotions (Plutchik)
+#################################################################
+
+###  http://example.org/efo/plutchik#Joy
+pl:Joy rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikBasicEmotion ;
+    rdfs:label "Joy" .
+
+###  http://example.org/efo/plutchik#Trust
+pl:Trust rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikBasicEmotion ;
+    rdfs:label "Trust" .
+
+###  http://example.org/efo/plutchik#Fear
+pl:Fear rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikBasicEmotion ;
+    rdfs:label "Fear" .
+
+###  http://example.org/efo/plutchik#Surprise
+pl:Surprise rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikBasicEmotion ;
+    rdfs:label "Surprise" .
+
+###  http://example.org/efo/plutchik#Sadness
+pl:Sadness rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikBasicEmotion ;
+    rdfs:label "Sadness" .
+
+###  http://example.org/efo/plutchik#Disgust
+pl:Disgust rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikBasicEmotion ;
+    rdfs:label "Disgust" .
+
+###  http://example.org/efo/plutchik#Anger
+pl:Anger rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikBasicEmotion ;
+    rdfs:label "Anger" .
+
+###  http://example.org/efo/plutchik#Anticipation
+pl:Anticipation rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikBasicEmotion ;
+    rdfs:label "Anticipation" .
+
+#################################################################
+#    10 Dyads (Compound Emotions)
+#################################################################
+
+### Primary Dyads (8) - adjacent emotions on Plutchik's wheel
+
+###  Love = Joy + Trust
+pl:Love rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Joy ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Trust ] ) ] ;
+    rdfs:label "Love" ;
+    rdfs:comment "Primary dyad: Joy + Trust" .
+
+###  Submission = Trust + Fear
+pl:Submission rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Trust ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Fear ] ) ] ;
+    rdfs:label "Submission" ;
+    rdfs:comment "Primary dyad: Trust + Fear" .
+
+###  Awe = Fear + Surprise
+pl:Awe rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Fear ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Surprise ] ) ] ;
+    rdfs:label "Awe" ;
+    rdfs:comment "Primary dyad: Fear + Surprise" .
+
+###  Disapproval = Surprise + Sadness
+pl:Disapproval rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Surprise ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Sadness ] ) ] ;
+    rdfs:label "Disapproval" ;
+    rdfs:comment "Primary dyad: Surprise + Sadness" .
+
+###  Remorse = Sadness + Disgust
+pl:Remorse rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Sadness ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Disgust ] ) ] ;
+    rdfs:label "Remorse" ;
+    rdfs:comment "Primary dyad: Sadness + Disgust" .
+
+###  Contempt = Disgust + Anger
+pl:Contempt rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Disgust ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Anger ] ) ] ;
+    rdfs:label "Contempt" ;
+    rdfs:comment "Primary dyad: Disgust + Anger" .
+
+###  Aggressiveness = Anger + Anticipation
+pl:Aggressiveness rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Anger ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Anticipation ] ) ] ;
+    rdfs:label "Aggressiveness" ;
+    rdfs:comment "Primary dyad: Anger + Anticipation" .
+
+###  Optimism = Anticipation + Joy
+pl:Optimism rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Anticipation ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Joy ] ) ] ;
+    rdfs:label "Optimism" ;
+    rdfs:comment "Primary dyad: Anticipation + Joy" .
+
+### Secondary Dyads (2) - non-adjacent emotions
+
+###  Hope = Anticipation + Trust
+pl:Hope rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Anticipation ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Trust ] ) ] ;
+    rdfs:label "Hope" ;
+    rdfs:comment "Secondary dyad: Anticipation + Trust" .
+
+###  Pride = Anger + Joy
+pl:Pride rdf:type owl:Class ;
+    rdfs:subClassOf pl:PlutchikDyad ;
+    owl:equivalentClass [ rdf:type owl:Class ;
+                          owl:intersectionOf ( pl:PlutchikDyad
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Anger ]
+                                               [ rdf:type owl:Restriction ;
+                                                 owl:onProperty pl:hasComponentEmotion ;
+                                                 owl:someValuesFrom pl:Joy ] ) ] ;
+    rdfs:label "Pride" ;
+    rdfs:comment "Secondary dyad: Anger + Joy" .

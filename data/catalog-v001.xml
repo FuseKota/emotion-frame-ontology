@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
-    <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2" prefer="public" xml:base=""/>
+    <uri id="Imports Wizard Entry" name="http://example.org/efo/plutchik/inference" uri="file:/Users/kotafuse/Research/EmotionOntology/Phase1/efo_repro/output/inferred_only.ttl"/>
+    <uri id="Imports Wizard Entry" name="http://example.org/efo/plutchik" uri="file:/Users/kotafuse/Research/EmotionOntology/Phase1/efo_repro/output/out.ttl"/>
+    <uri id="Imports Wizard Entry" name="http://example.org/efo/plutchik" uri="file:/Users/kotafuse/Research/EmotionOntology/Phase1/efo_repro/modules/EFO-PlutchikDyad.ttl"/>
+    <uri id="Imports Wizard Entry" name="http://example.org/efo/plutchik" uri="file:/Users/kotafuse/Research/EmotionOntology/Phase1/efo_repro/output/out.ttl"/>
+    <uri id="Imports Wizard Entry" name="http://example.org/efo/plutchik" uri="file:/Users/kotafuse/Research/EmotionOntology/Phase1/efo_repro/modules/EFO-PlutchikDyad.ttl"/>
+    <uri id="Imports Wizard Entry" name="http://example.org/efo/plutchik" uri="file:/Users/kotafuse/Research/EmotionOntology/Phase1/efo_repro/output/out.ttl"/>
+    <uri id="Imports Wizard Entry" name="http://example.org/efo/plutchik" uri="file:/Users/kotafuse/Research/EmotionOntology/Phase1/efo_repro/modules/EFO-PlutchikDyad.ttl"/>
+    <uri id="Imports Wizard Entry" name="http://example.org/efo/plutchik" uri="file:/Users/kotafuse/Research/EmotionOntology/Phase1/efo_repro/output/out.ttl"/>
+    <uri id="Imports Wizard Entry" name="http://example.org/efo/plutchik" uri="file:/Users/kotafuse/Research/EmotionOntology/Phase1/efo_repro/modules/EFO-PlutchikDyad.ttl"/>
+    <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2" prefer="public"/>
 </catalog>
