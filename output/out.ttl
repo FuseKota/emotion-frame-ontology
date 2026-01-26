@@ -3875,63 +3875,63 @@
 
 ex:s1 a fschema:FrameOccurrence ;
     rdfs:label "Situation 1: Love scenario" ;
-    pl:hasEvidence [ a pl:EmotionEvidence ;
+    pl:hasEvidence [ a pl:DyadEvidence ;
             pl:derivedFrom ex:s1_ev_joy,
                 ex:s1_ev_trust ;
             pl:emotion pl:Love ;
-            pl:inferenceMethod "min-threshold-0.4"^^xsd:string ;
+            pl:method "min-threshold"^^xsd:string ;
             pl:score 0.70 ],
         ex:s1_ev_joy,
         ex:s1_ev_trust ;
-    pl:satisfiesEmotion pl:Love .
+    pl:satisfies pl:Love .
 
 ex:s2 a fschema:FrameOccurrence ;
     rdfs:label "Situation 2: Contempt scenario" ;
-    pl:hasEvidence [ a pl:EmotionEvidence ;
+    pl:hasEvidence [ a pl:DyadEvidence ;
             pl:derivedFrom ex:s2_ev_anger,
                 ex:s2_ev_disgust ;
             pl:emotion pl:Contempt ;
-            pl:inferenceMethod "min-threshold-0.4"^^xsd:string ;
+            pl:method "min-threshold"^^xsd:string ;
             pl:score 0.60 ],
         ex:s2_ev_anger,
         ex:s2_ev_disgust ;
-    pl:satisfiesEmotion pl:Contempt .
+    pl:satisfies pl:Contempt .
 
 ex:s3 a fschema:FrameOccurrence ;
     rdfs:label "Situation 3: Aggressiveness scenario" ;
-    pl:hasEvidence [ a pl:EmotionEvidence ;
+    pl:hasEvidence [ a pl:DyadEvidence ;
             pl:derivedFrom ex:s3_ev_anger,
                 ex:s3_ev_anticipation ;
             pl:emotion pl:Aggressiveness ;
-            pl:inferenceMethod "min-threshold-0.4"^^xsd:string ;
+            pl:method "min-threshold"^^xsd:string ;
             pl:score 0.50 ],
         ex:s3_ev_anger,
         ex:s3_ev_anticipation ;
-    pl:satisfiesEmotion pl:Aggressiveness .
+    pl:satisfies pl:Aggressiveness .
 
 ex:s4 a fschema:FrameOccurrence ;
     rdfs:label "Situation 4: Disapproval scenario" ;
-    pl:hasEvidence [ a pl:EmotionEvidence ;
+    pl:hasEvidence [ a pl:DyadEvidence ;
             pl:derivedFrom ex:s4_ev_sadness,
                 ex:s4_ev_surprise ;
             pl:emotion pl:Disapproval ;
-            pl:inferenceMethod "min-threshold-0.4"^^xsd:string ;
+            pl:method "min-threshold"^^xsd:string ;
             pl:score 0.45 ],
         ex:s4_ev_sadness,
         ex:s4_ev_surprise ;
-    pl:satisfiesEmotion pl:Disapproval .
+    pl:satisfies pl:Disapproval .
 
 ex:s5 a fschema:FrameOccurrence ;
     rdfs:label "Situation 5: Hope scenario (boundary case)" ;
-    pl:hasEvidence [ a pl:EmotionEvidence ;
+    pl:hasEvidence [ a pl:DyadEvidence ;
             pl:derivedFrom ex:s5_ev_anticipation,
                 ex:s5_ev_trust ;
             pl:emotion pl:Hope ;
-            pl:inferenceMethod "min-threshold-0.4"^^xsd:string ;
+            pl:method "min-threshold"^^xsd:string ;
             pl:score 0.41 ],
         ex:s5_ev_anticipation,
         ex:s5_ev_trust ;
-    pl:satisfiesEmotion pl:Hope .
+    pl:satisfies pl:Hope .
 
 ex:s6 a fschema:FrameOccurrence ;
     rdfs:label "Situation 6: Threshold test (no dyad expected)" ;
@@ -4002,38 +4002,38 @@ pl:Submission a owl:Class ;
 
 pl:derivedFrom a owl:ObjectProperty ;
     rdfs:label "derived from" ;
-    rdfs:comment "Links a derived (inferred) EmotionEvidence to its source evidence nodes." ;
-    rdfs:domain pl:EmotionEvidence ;
-    rdfs:range pl:EmotionEvidence .
+    rdfs:comment "Provenance link from DyadEvidence to its two component Evidence nodes." ;
+    rdfs:domain pl:DyadEvidence ;
+    rdfs:range pl:Evidence .
 
 pl:emotion a owl:ObjectProperty ;
     rdfs:label "emotion" ;
-    rdfs:comment "Links an EmotionEvidence to the emotion it evidences." ;
-    rdfs:domain pl:EmotionEvidence ;
+    rdfs:comment "Links an Evidence node to the emotion it evidences." ;
+    rdfs:domain pl:Evidence ;
     rdfs:range emo:Emotion .
 
 pl:hasEvidence a owl:ObjectProperty ;
     rdfs:label "has evidence" ;
-    rdfs:comment "Links a FrameOccurrence to an EmotionEvidence node." ;
+    rdfs:comment "Links a FrameOccurrence (EmotionSituation) to an Evidence node." ;
     rdfs:domain fschema:FrameOccurrence ;
-    rdfs:range pl:EmotionEvidence .
+    rdfs:range pl:Evidence .
 
-pl:inferenceMethod a owl:DatatypeProperty ;
-    rdfs:label "inference method" ;
-    rdfs:comment "Describes the method used to infer this evidence (e.g., 'min-threshold-0.4')." ;
-    rdfs:domain pl:EmotionEvidence ;
+pl:method a owl:DatatypeProperty ;
+    rdfs:label "method" ;
+    rdfs:comment "Describes the inference method used (e.g., 'min-threshold')." ;
+    rdfs:domain pl:DyadEvidence ;
     rdfs:range xsd:string .
 
-pl:satisfiesEmotion a owl:ObjectProperty ;
-    rdfs:label "satisfies emotion" ;
+pl:satisfies a owl:ObjectProperty ;
+    rdfs:label "satisfies" ;
     rdfs:comment "Indicates that a FrameOccurrence satisfies (exhibits) an emotion based on inference." ;
     rdfs:domain fschema:FrameOccurrence ;
     rdfs:range emo:Emotion .
 
 pl:score a owl:DatatypeProperty ;
     rdfs:label "score" ;
-    rdfs:comment "The confidence/intensity score of the emotion evidence (0.0 to 1.0)." ;
-    rdfs:domain pl:EmotionEvidence ;
+    rdfs:comment "Numeric score in [0, 1] representing the confidence/intensity of the emotion evidence." ;
+    rdfs:domain pl:Evidence ;
     rdfs:range xsd:decimal .
 
 <http://example.org/efo/plutchik/inference> a owl:Ontology ;
@@ -15031,11 +15031,11 @@ vn:Yammer_37030000 emo:triggers be:Sadness .
 
 <https://w3id.org/framester/wn/wn30/instances/synset-yellow_peril-noun-1> emo:triggers be:Fear .
 
-ex:s6_ev_fear a pl:EmotionEvidence ;
+ex:s6_ev_fear a pl:Evidence ;
     pl:emotion pl:Fear ;
     pl:score 0.39 .
 
-ex:s6_ev_surprise a pl:EmotionEvidence ;
+ex:s6_ev_surprise a pl:Evidence ;
     pl:emotion pl:Surprise ;
     pl:score 0.80 .
 
@@ -15624,43 +15624,43 @@ be:hasMessage a owl:ObjectProperty .
 be:isPreconditionOf a owl:ObjectProperty ;
     rdfs:subPropertyOf dul:isPreconditionOf .
 
-ex:s1_ev_joy a pl:EmotionEvidence ;
+ex:s1_ev_joy a pl:Evidence ;
     pl:emotion pl:Joy ;
     pl:score 0.80 .
 
-ex:s1_ev_trust a pl:EmotionEvidence ;
+ex:s1_ev_trust a pl:Evidence ;
     pl:emotion pl:Trust ;
     pl:score 0.70 .
 
-ex:s2_ev_anger a pl:EmotionEvidence ;
+ex:s2_ev_anger a pl:Evidence ;
     pl:emotion pl:Anger ;
     pl:score 0.60 .
 
-ex:s2_ev_disgust a pl:EmotionEvidence ;
+ex:s2_ev_disgust a pl:Evidence ;
     pl:emotion pl:Disgust ;
     pl:score 0.60 .
 
-ex:s3_ev_anger a pl:EmotionEvidence ;
+ex:s3_ev_anger a pl:Evidence ;
     pl:emotion pl:Anger ;
     pl:score 0.90 .
 
-ex:s3_ev_anticipation a pl:EmotionEvidence ;
+ex:s3_ev_anticipation a pl:Evidence ;
     pl:emotion pl:Anticipation ;
     pl:score 0.50 .
 
-ex:s4_ev_sadness a pl:EmotionEvidence ;
+ex:s4_ev_sadness a pl:Evidence ;
     pl:emotion pl:Sadness ;
     pl:score 0.45 .
 
-ex:s4_ev_surprise a pl:EmotionEvidence ;
+ex:s4_ev_surprise a pl:Evidence ;
     pl:emotion pl:Surprise ;
     pl:score 0.60 .
 
-ex:s5_ev_anticipation a pl:EmotionEvidence ;
+ex:s5_ev_anticipation a pl:Evidence ;
     pl:emotion pl:Anticipation ;
     pl:score 0.42 .
 
-ex:s5_ev_trust a pl:EmotionEvidence ;
+ex:s5_ev_trust a pl:Evidence ;
     pl:emotion pl:Trust ;
     pl:score 0.41 .
 
@@ -15826,6 +15826,11 @@ be:hasPersonalityTrait a owl:ObjectProperty ;
 emo:BE_Emotion a owl:Class ;
     rdfs:subClassOf emo:Emotion .
 
+pl:DyadEvidence a owl:Class ;
+    rdfs:label "Dyad Evidence" ;
+    rdfs:comment "Inferred evidence for a dyad emotion, derived from two basic-emotion evidences." ;
+    rdfs:subClassOf pl:Evidence .
+
 be:BE_Emotion a owl:Class ;
     owl:equivalentClass [ a owl:Class ;
             owl:intersectionOf ( [ a owl:Restriction ;
@@ -15871,6 +15876,10 @@ be:EmotionImpediment a owl:Class ;
 fschema:FrameOccurrence a owl:Class ;
     rdfs:subClassOf dul:Situation .
 
+pl:Evidence a owl:Class ;
+    rdfs:label "Evidence" ;
+    rdfs:comment "A node representing evidence for an emotion with an associated score." .
+
 be:emotionalTendencyTowards a owl:ObjectProperty ;
     rdfs:domain be:Psychopathology ;
     rdfs:range be:BE_Emotion .
@@ -15887,10 +15896,6 @@ pl:PlutchikDyad a owl:Class ;
     rdfs:label "Plutchik Dyad" ;
     rdfs:comment "A compound emotion (dyad) formed by combining two adjacent basic emotions in Plutchik's wheel." ;
     rdfs:subClassOf emo:Emotion .
-
-pl:EmotionEvidence a owl:Class ;
-    rdfs:label "Emotion Evidence" ;
-    rdfs:comment "A node representing evidence for an emotion with an associated score." .
 
 be:hasAntidote a owl:ObjectProperty ;
     rdfs:range be:EmotionAntidote .

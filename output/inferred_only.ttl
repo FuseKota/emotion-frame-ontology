@@ -11,50 +11,50 @@
     rdfs:label "EFO Plutchik Dyad Inference Results" ;
     rdfs:comment "Inferred dyad emotions using min-threshold aggregation (TH=0.4)" .
 
-# Inferred dyad assignments
-ex:s1 pl:satisfiesEmotion pl:Love .
-ex:s2 pl:satisfiesEmotion pl:Contempt .
-ex:s3 pl:satisfiesEmotion pl:Aggressiveness .
-ex:s4 pl:satisfiesEmotion pl:Disapproval .
-ex:s5 pl:satisfiesEmotion pl:Hope .
+# Inferred dyad assignments (pl:satisfies)
+ex:s1 pl:satisfies pl:Love .
+ex:s2 pl:satisfies pl:Contempt .
+ex:s3 pl:satisfies pl:Aggressiveness .
+ex:s4 pl:satisfies pl:Disapproval .
+ex:s5 pl:satisfies pl:Hope .
 # ex:s6 - no dyad inferred (Fear=0.39 < TH=0.4)
 
-# Inferred Evidence for s1 (Love)
-_:ev_s1_love rdf:type pl:EmotionEvidence ;
+# DyadEvidence for s1 (Love)
+_:ev_s1_love rdf:type pl:DyadEvidence ;
     pl:emotion pl:Love ;
     pl:score "0.70"^^xsd:decimal ;
     pl:derivedFrom ex:s1_ev_joy, ex:s1_ev_trust ;
-    pl:inferenceMethod "min-threshold-0.4" .
+    pl:method "min-threshold" .
 ex:s1 pl:hasEvidence _:ev_s1_love .
 
-# Inferred Evidence for s2 (Contempt)
-_:ev_s2_contempt rdf:type pl:EmotionEvidence ;
+# DyadEvidence for s2 (Contempt)
+_:ev_s2_contempt rdf:type pl:DyadEvidence ;
     pl:emotion pl:Contempt ;
     pl:score "0.60"^^xsd:decimal ;
     pl:derivedFrom ex:s2_ev_disgust, ex:s2_ev_anger ;
-    pl:inferenceMethod "min-threshold-0.4" .
+    pl:method "min-threshold" .
 ex:s2 pl:hasEvidence _:ev_s2_contempt .
 
-# Inferred Evidence for s3 (Aggressiveness)
-_:ev_s3_aggressiveness rdf:type pl:EmotionEvidence ;
+# DyadEvidence for s3 (Aggressiveness)
+_:ev_s3_aggressiveness rdf:type pl:DyadEvidence ;
     pl:emotion pl:Aggressiveness ;
     pl:score "0.50"^^xsd:decimal ;
     pl:derivedFrom ex:s3_ev_anger, ex:s3_ev_anticipation ;
-    pl:inferenceMethod "min-threshold-0.4" .
+    pl:method "min-threshold" .
 ex:s3 pl:hasEvidence _:ev_s3_aggressiveness .
 
-# Inferred Evidence for s4 (Disapproval)
-_:ev_s4_disapproval rdf:type pl:EmotionEvidence ;
+# DyadEvidence for s4 (Disapproval)
+_:ev_s4_disapproval rdf:type pl:DyadEvidence ;
     pl:emotion pl:Disapproval ;
     pl:score "0.45"^^xsd:decimal ;
     pl:derivedFrom ex:s4_ev_surprise, ex:s4_ev_sadness ;
-    pl:inferenceMethod "min-threshold-0.4" .
+    pl:method "min-threshold" .
 ex:s4 pl:hasEvidence _:ev_s4_disapproval .
 
-# Inferred Evidence for s5 (Hope)
-_:ev_s5_hope rdf:type pl:EmotionEvidence ;
+# DyadEvidence for s5 (Hope)
+_:ev_s5_hope rdf:type pl:DyadEvidence ;
     pl:emotion pl:Hope ;
     pl:score "0.41"^^xsd:decimal ;
     pl:derivedFrom ex:s5_ev_anticipation, ex:s5_ev_trust ;
-    pl:inferenceMethod "min-threshold-0.4" .
+    pl:method "min-threshold" .
 ex:s5 pl:hasEvidence _:ev_s5_hope .

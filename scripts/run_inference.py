@@ -163,26 +163,25 @@ def materialize_inference(
     Add inferred dyad evidence to the graph.
 
     Adds:
-    - pl:satisfiesEmotion link from FrameOccurrence to dyad
-    - New EmotionEvidence node with score, derivedFrom, inferenceMethod
+    - pl:satisfies link from FrameOccurrence to dyad
+    - New DyadEvidence node with score, derivedFrom, method
     - pl:hasEvidence link from FrameOccurrence to new evidence
     """
     dyad_uri = PL[dyad_name]
 
-    # (A) Add satisfiesEmotion
-    g.add((frame_occ, PL.satisfiesEmotion, dyad_uri))
+    # (A) Add satisfies
+    g.add((frame_occ, PL.satisfies, dyad_uri))
 
-    # (B) Create new evidence node
+    # (B) Create new DyadEvidence node
     new_ev = BNode()
-    g.add((new_ev, RDF.type, PL.EmotionEvidence))
+    g.add((new_ev, RDF.type, PL.DyadEvidence))
     g.add((new_ev, PL.emotion, dyad_uri))
     g.add((new_ev, PL.score, Literal(dyad_score, datatype=XSD.decimal)))
     g.add((new_ev, PL.derivedFrom, ev1))
     g.add((new_ev, PL.derivedFrom, ev2))
 
     # Inference method string
-    method_str = f"min-threshold-{threshold}"
-    g.add((new_ev, PL.inferenceMethod, Literal(method_str, datatype=XSD.string)))
+    g.add((new_ev, PL.method, Literal("min-threshold", datatype=XSD.string)))
 
     # (C) Link evidence to FrameOccurrence
     g.add((frame_occ, PL.hasEvidence, new_ev))

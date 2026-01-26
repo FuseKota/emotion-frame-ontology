@@ -30,30 +30,30 @@ pl:hasComponentEmotion rdf:type owl:ObjectProperty ;
 ###  http://example.org/efo/plutchik#hasEvidence
 pl:hasEvidence rdf:type owl:ObjectProperty ;
     rdfs:domain fschema:FrameOccurrence ;
-    rdfs:range pl:EmotionEvidence ;
-    rdfs:comment "Links a FrameOccurrence to an EmotionEvidence node." ;
+    rdfs:range pl:Evidence ;
+    rdfs:comment "Links a FrameOccurrence (EmotionSituation) to an Evidence node." ;
     rdfs:label "has evidence" .
 
 ###  http://example.org/efo/plutchik#emotion
 pl:emotion rdf:type owl:ObjectProperty ;
-    rdfs:domain pl:EmotionEvidence ;
+    rdfs:domain pl:Evidence ;
     rdfs:range emo:Emotion ;
-    rdfs:comment "Links an EmotionEvidence to the emotion it evidences." ;
+    rdfs:comment "Links an Evidence node to the emotion it evidences." ;
     rdfs:label "emotion" .
 
 ###  http://example.org/efo/plutchik#derivedFrom
 pl:derivedFrom rdf:type owl:ObjectProperty ;
-    rdfs:domain pl:EmotionEvidence ;
-    rdfs:range pl:EmotionEvidence ;
-    rdfs:comment "Links a derived (inferred) EmotionEvidence to its source evidence nodes." ;
+    rdfs:domain pl:DyadEvidence ;
+    rdfs:range pl:Evidence ;
+    rdfs:comment "Provenance link from DyadEvidence to its two component Evidence nodes." ;
     rdfs:label "derived from" .
 
-###  http://example.org/efo/plutchik#satisfiesEmotion
-pl:satisfiesEmotion rdf:type owl:ObjectProperty ;
+###  http://example.org/efo/plutchik#satisfies
+pl:satisfies rdf:type owl:ObjectProperty ;
     rdfs:domain fschema:FrameOccurrence ;
     rdfs:range emo:Emotion ;
     rdfs:comment "Indicates that a FrameOccurrence satisfies (exhibits) an emotion based on inference." ;
-    rdfs:label "satisfies emotion" .
+    rdfs:label "satisfies" .
 
 #################################################################
 #    Datatype Properties
@@ -61,26 +61,32 @@ pl:satisfiesEmotion rdf:type owl:ObjectProperty ;
 
 ###  http://example.org/efo/plutchik#score
 pl:score rdf:type owl:DatatypeProperty ;
-    rdfs:domain pl:EmotionEvidence ;
+    rdfs:domain pl:Evidence ;
     rdfs:range xsd:decimal ;
-    rdfs:comment "The confidence/intensity score of the emotion evidence (0.0 to 1.0)." ;
+    rdfs:comment "Numeric score in [0, 1] representing the confidence/intensity of the emotion evidence." ;
     rdfs:label "score" .
 
-###  http://example.org/efo/plutchik#inferenceMethod
-pl:inferenceMethod rdf:type owl:DatatypeProperty ;
-    rdfs:domain pl:EmotionEvidence ;
+###  http://example.org/efo/plutchik#method
+pl:method rdf:type owl:DatatypeProperty ;
+    rdfs:domain pl:DyadEvidence ;
     rdfs:range xsd:string ;
-    rdfs:comment "Describes the method used to infer this evidence (e.g., 'min-threshold-0.4')." ;
-    rdfs:label "inference method" .
+    rdfs:comment "Describes the inference method used (e.g., 'min-threshold')." ;
+    rdfs:label "method" .
 
 #################################################################
 #    Classes
 #################################################################
 
-###  http://example.org/efo/plutchik#EmotionEvidence
-pl:EmotionEvidence rdf:type owl:Class ;
+###  http://example.org/efo/plutchik#Evidence
+pl:Evidence rdf:type owl:Class ;
     rdfs:comment "A node representing evidence for an emotion with an associated score." ;
-    rdfs:label "Emotion Evidence" .
+    rdfs:label "Evidence" .
+
+###  http://example.org/efo/plutchik#DyadEvidence
+pl:DyadEvidence rdf:type owl:Class ;
+    rdfs:subClassOf pl:Evidence ;
+    rdfs:comment "Inferred evidence for a dyad emotion, derived from two basic-emotion evidences." ;
+    rdfs:label "Dyad Evidence" .
 
 ###  http://example.org/efo/plutchik#PlutchikBasicEmotion
 pl:PlutchikBasicEmotion rdf:type owl:Class ;
