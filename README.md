@@ -245,31 +245,56 @@ Note: ex:s6 has Fear below threshold (0.39 < 0.4), so Awe is not inferred.
 ```
 efo_repro/
 ├── README.md
+├── WORK_LOG.md                   # Reproduction work log (Japanese)
 ├── requirements.txt              # Python dependencies
 ├── data/
 │   ├── EmoCore_iswc.ttl          # Core emotion vocabulary
 │   ├── BE_iswc.ttl               # Basic Emotions module (EFO-BE)
 │   ├── BasicEmotionTriggers_iswc.ttl  # Trigger patterns
 │   └── sample.ttl                # Sample data for dyad inference
+├── docs/
+│   ├── architecture.md           # System architecture
+│   ├── inference-pipeline.md     # Inference pipeline details
+│   ├── validation-and-cq.md      # SHACL validation & CQ queries
+│   └── design-decisions.md       # Design decisions & rationale
 ├── imports/
 │   ├── DUL.owl                   # DOLCE-Ultralite
 │   └── catalog-v001.xml          # Protege IRI resolution
 ├── modules/
 │   └── EFO-PlutchikDyad.ttl      # Plutchik Dyad extension module
 ├── output/
-│   └── out.ttl                   # Inference output (generated)
+│   ├── out.ttl                   # Inference output (generated)
+│   └── threshold_sensitivity.csv # Threshold sweep results (generated)
+├── shacl/
+│   └── plutchik-dyad-shapes.ttl  # SHACL shape definitions
 ├── sparql/
 │   ├── 01_list_be_emotions.rq
 │   ├── 02_intensity_relations.rq
 │   ├── 03_optional_relations.rq
 │   ├── 04_impediments.rq
-│   └── 05_ontology_stats.rq
+│   ├── 05_ontology_stats.rq
+│   ├── cq/                       # Competency question queries (7)
+│   └── dyad_rules/               # SPARQL CONSTRUCT rules (10)
 └── scripts/
     ├── download.sh               # Download all ontologies
     ├── extract_imports.py        # Analyze owl:imports
     ├── run_fuseki.sh             # Fuseki management
-    └── run_inference.py          # Plutchik dyad inference
+    ├── run_inference.py          # Plutchik dyad inference
+    ├── threshold_sweep.py        # Threshold sensitivity analysis
+    └── validate_shacl.py         # SHACL validation
 ```
+
+## Documentation
+
+Detailed documentation is available in the `docs/` directory:
+
+| Document | Description |
+|----------|-------------|
+| [Paper Summary](docs/paper-summary.md) | Summary of the EFO paper (De Giorgis & Gangemi, 2024): architecture, modules, evaluation, and multimodal extensions |
+| [Architecture](docs/architecture.md) | System architecture: ontology module structure, namespaces, class hierarchy, properties, and data flow |
+| [Inference Pipeline](docs/inference-pipeline.md) | Min-threshold algorithm, SPARQL CONSTRUCT rules, test data design, and threshold sensitivity analysis |
+| [Validation and CQ](docs/validation-and-cq.md) | SHACL shape definitions, validation script usage, competency question queries, and quality checks |
+| [Design Decisions](docs/design-decisions.md) | Design rationale: paper correspondence, key design choices, and known limitations |
 
 ## References
 
