@@ -20,7 +20,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from experiment.config import DATA_DIR, DYAD_NAMES, DYADS, OUTPUT_DIR, PLUTCHIK_EMOTIONS
+from experiment.config import (
+    DATA_DIR, DYAD_NAMES, DYADS, FOCUS_DYADS, DYAD_CONSISTENCY_MAP,
+    OUTPUT_DIR, PLUTCHIK_EMOTIONS,
+)
 
 FIGURES_DIR = OUTPUT_DIR / "figures"
 
@@ -313,6 +316,320 @@ def fig6_mapping_comparison():
 
 
 # ---------------------------------------------------------------------------
+# Figure 7: SemEval continuous correlation scatter (Paper Fig 1)
+# ---------------------------------------------------------------------------
+def fig7_semeval_continuous():
+    """2x2 scatter: dyadScore vs SemEval intensity for focus dyads."""
+    from scipy import stats as sp_stats
+
+    # Load data
+    semeval_continuous_file = OUTPUT_DIR / "semeval_continuous.json"
+    if not semeval_continuous_file.exists():
+        print("  [Fig 7] Skipped (run step7_semeval_continuous first)")
+        return
+
+    with open(semeval_continuous_file) as f:
+        report = json.load(f)
+
+    plutchik_cache = DATA_DIR / "semeval_plutchik_cache.jsonl"
+    if not plutchik_cache.exists():
+        print("  [Fig 7] Skipped (missing semeval_plutchik_cache.jsonl)")
+        return
+
+    # Load plutchik cache
+    text_to_plutchik: Dict[str, Dict[str, float]] = {}
+    with open(plutchik_cache, encoding="utf-8") as f:
+        for line in f:
+            rec = json.loads(line)
+            text_to_plutchik[rec["text"]] = rec["plutchik_scores"]
+
+    # Load SemEval intensities
+    semeval_cache_dir = DATA_DIR / "semeval_cache"
+    text_to_intensities: Dict[str, Dict[str, float]] = {}
+    for emo in ["anger", "fear", "joy", "sadness"]:
+        cache = semeval_cache_dir / f"semeval_ei_reg_{emo}.jsonl"
+        if not cache.exists():
+            continue
+        with open(cache, encoding="utf-8") as f:
+            for line in f:
+                rec = json.loads(line)
+                text = rec["text"]
+                if text not in text_to_intensities:
+                    text_to_intensities[text] = {}
+                text_to_intensities[text][emo] = rec["intensity"]
+
+    # Focus dyad -> semeval emotion pairs
+    panels = []
+    for dyad in FOCUS_DYADS:
+        emos = DYAD_CONSISTENCY_MAP.get(dyad, [])
+        if emos:
+            panels.append((dyad, emos[0]))
+
+    fig, axes = plt.subplots(2, 2, figsize=(10, 9))
+
+    for ax, (dyad, semeval_emo) in zip(axes.flat, panels):
+        e1, e2 = DYADS[dyad]
+        xs, ys = [], []
+        for text, plutchik in text_to_plutchik.items():
+            intensity = text_to_intensities.get(text, {}).get(semeval_emo)
+            if intensity is None:
+                continue
+            dscore = min(plutchik.get(e1, 0.0), plutchik.get(e2, 0.0))
+            xs.append(dscore)
+            ys.append(intensity)
+
+        xs = np.array(xs)
+        ys = np.array(ys)
+
+        ax.scatter(xs, ys, alpha=0.12, s=6, color="#2196F3", edgecolors="none")
+
+        # Regression line + CI
+        if len(xs) > 10:
+            # Linear fit for visual
+            slope, intercept = np.polyfit(xs, ys, 1)
+            x_line = np.linspace(xs.min(), xs.max(), 100)
+            y_line = slope * x_line + intercept
+            ax.plot(x_line, y_line, color="#E53935", linewidth=2, label="OLS fit")
+
+            # Bootstrap CI for regression line
+            rng = np.random.default_rng(42)
+            y_boots = np.zeros((200, len(x_line)))
+            for b in range(200):
+                idx = rng.integers(0, len(xs), size=len(xs))
+                s_, i_ = np.polyfit(xs[idx], ys[idx], 1)
+                y_boots[b] = s_ * x_line + i_
+            ci_lo = np.percentile(y_boots, 2.5, axis=0)
+            ci_hi = np.percentile(y_boots, 97.5, axis=0)
+            ax.fill_between(x_line, ci_lo, ci_hi, alpha=0.15, color="#E53935")
+
+        # Get stats from report
+        res = report.get("results", {}).get(dyad, {}).get(semeval_emo, {})
+        rho = res.get("spearman_rho", 0)
+        ci = res.get("spearman_ci_95", [0, 0])
+        pr_auc = res.get("pr_auc", {}).get("0.5")
+
+        annotation = f"rho={rho:.3f} [{ci[0]:.3f}, {ci[1]:.3f}]"
+        if pr_auc is not None:
+            annotation += f"\nPR-AUC(0.5)={pr_auc:.3f}"
+        annotation += f"\nn={len(xs)}"
+
+        ax.text(0.97, 0.97, annotation, transform=ax.transAxes,
+                ha="right", va="top", fontsize=9,
+                bbox=dict(boxstyle="round,pad=0.4", fc="white", ec="gray", alpha=0.9))
+
+        ax.set_xlabel(f"dyadScore ({dyad})")
+        ax.set_ylabel(f"SemEval intensity ({semeval_emo})")
+        ax.set_title(f"{dyad} / {semeval_emo}")
+        ax.set_xlim(-0.02, max(xs.max() * 1.1, 0.5) if len(xs) > 0 else 1.0)
+        ax.set_ylim(-0.02, 1.05)
+        ax.grid(True, alpha=0.2)
+
+    fig.suptitle("Construct Validity: dyadScore vs SemEval-2018 Intensity", y=1.01)
+    fig.tight_layout()
+
+    out = FIGURES_DIR / "semeval_continuous_correlation.png"
+    fig.savefig(out)
+    plt.close(fig)
+    print(f"  [Fig 7] {out}")
+
+
+# ---------------------------------------------------------------------------
+# Figure 8: Incremental value (Paper Fig 2)
+# ---------------------------------------------------------------------------
+def fig8_incremental_value():
+    """Grouped bar chart: R-squared comparison across 3 models for focus dyads."""
+    incr_file = OUTPUT_DIR / "incremental_value.json"
+    if not incr_file.exists():
+        print("  [Fig 8] Skipped (run step8_incremental_value first)")
+        return
+
+    with open(incr_file) as f:
+        data = json.load(f)
+
+    results = data["results"]
+    labels = []
+    r2_m1 = []
+    r2_m2 = []
+    r2_m3 = []
+    partial_corrs = []
+    delta_sigs = []
+
+    for dyad in FOCUS_DYADS:
+        if dyad not in results:
+            continue
+        for emo, res in results[dyad].items():
+            if res.get("skipped"):
+                continue
+            ols = res.get("ols", {})
+            m1 = ols.get("model1_components", {})
+            m2 = ols.get("model2_dyadscore", {})
+            m3 = ols.get("model3_interaction", {})
+
+            labels.append(f"{dyad}\n({emo})")
+            r2_m1.append(m1.get("r2", 0))
+            r2_m2.append(m2.get("r2", 0))
+            r2_m3.append(m3.get("r2", 0))
+            partial_corrs.append(res.get("partial_corr", 0))
+            delta_sigs.append(m2.get("f_p", 1) < 0.05)
+
+    if not labels:
+        print("  [Fig 8] Skipped (no results)")
+        return
+
+    x = np.arange(len(labels))
+    width = 0.25
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5),
+                                     gridspec_kw={"width_ratios": [2, 1]})
+
+    # Left panel: grouped R² bars
+    bars1 = ax1.bar(x - width, r2_m1, width, label="M1: comp1 + comp2",
+                    color="#BDBDBD")
+    bars2 = ax1.bar(x, r2_m2, width, label="M2: + dyadScore",
+                    color="#2196F3")
+    bars3 = ax1.bar(x + width, r2_m3, width, label="M3: + comp1*comp2",
+                    color="#FF9800")
+
+    # Delta R² annotations
+    for i in range(len(labels)):
+        dr2 = r2_m2[i] - r2_m1[i]
+        sig_mark = "*" if delta_sigs[i] else ""
+        ax1.annotate(
+            f"+{dr2:.4f}{sig_mark}",
+            xy=(x[i], r2_m2[i]),
+            xytext=(0, 8), textcoords="offset points",
+            ha="center", fontsize=8, color="#2196F3", fontweight="bold",
+        )
+
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(labels, fontsize=9)
+    ax1.set_ylabel("R-squared")
+    ax1.set_title("OLS Model Comparison")
+    ax1.legend(fontsize=8, loc="upper left")
+    ax1.grid(True, axis="y", alpha=0.3)
+
+    # Right panel: partial correlations
+    colors = ["#4CAF50" if p > 0 else "#E53935" for p in partial_corrs]
+    ax2.barh(range(len(labels)), partial_corrs, color=colors)
+    ax2.set_yticks(range(len(labels)))
+    ax2.set_yticklabels(labels, fontsize=9)
+    ax2.invert_yaxis()
+    ax2.set_xlabel("Partial Correlation")
+    ax2.set_title("dyadScore | (comp1, comp2)")
+    ax2.axvline(x=0, color="black", linewidth=0.5)
+    ax2.grid(True, axis="x", alpha=0.3)
+
+    for i, pc in enumerate(partial_corrs):
+        ax2.text(pc + 0.005 if pc >= 0 else pc - 0.005,
+                 i, f"{pc:.4f}", va="center",
+                 ha="left" if pc >= 0 else "right", fontsize=8)
+
+    fig.suptitle("Incremental Value: dyadScore Beyond Component Scores", y=1.01)
+    fig.tight_layout()
+
+    out = FIGURES_DIR / "incremental_value.png"
+    fig.savefig(out)
+    plt.close(fig)
+    print(f"  [Fig 8] {out}")
+
+
+# ---------------------------------------------------------------------------
+# Figure 9: Ontology QA dashboard (Paper Fig 4)
+# ---------------------------------------------------------------------------
+def fig9_ontology_qa():
+    """2-panel dashboard: SHACL results + CQ pass/fail grid."""
+    qa_file = OUTPUT_DIR / "ontology_qa.json"
+    if not qa_file.exists():
+        print("  [Fig 9] Skipped (run step9_ontology_qa first)")
+        return
+
+    with open(qa_file) as f:
+        data = json.load(f)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Left panel: KPI summary bars
+    summary = data["summary"]
+    kpi_names = [
+        "SHACL\nViolations/1K",
+        "derivedFrom\nCompleteness",
+        "Score\nSoundness",
+    ]
+    kpi_values = [
+        summary.get("violations_per_1k", 0),
+        summary.get("derivedFrom_completeness", 0),
+        summary.get("score_soundness", 0),
+    ]
+    # Normalize: violations should be inverted (lower is better)
+    kpi_display = [
+        1.0 - min(kpi_values[0] / 10, 1.0),  # 0 violations = 1.0
+        kpi_values[1],
+        kpi_values[2],
+    ]
+    colors = ["#4CAF50" if v >= 0.95 else "#FF9800" if v >= 0.8 else "#E53935"
+              for v in kpi_display]
+
+    bars = ax1.bar(kpi_names, kpi_display, color=colors, edgecolor="white", linewidth=1.5)
+    for bar, raw_val, disp_val in zip(bars, kpi_values, kpi_display):
+        label = f"{raw_val}" if raw_val < 1 else f"{raw_val:.1%}"
+        if kpi_names[0].startswith("SHACL"):
+            label = f"{kpi_values[0]:.1f}"
+        ax1.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+                 label, ha="center", va="bottom", fontsize=10, fontweight="bold")
+
+    # Correct labels
+    ax1.text(bars[0].get_x() + bars[0].get_width() / 2, bars[0].get_height() + 0.02,
+             f"{kpi_values[0]:.1f}", ha="center", va="bottom", fontsize=10, fontweight="bold")
+    ax1.text(bars[1].get_x() + bars[1].get_width() / 2, bars[1].get_height() + 0.02,
+             f"{kpi_values[1]:.1%}", ha="center", va="bottom", fontsize=10, fontweight="bold")
+    ax1.text(bars[2].get_x() + bars[2].get_width() / 2, bars[2].get_height() + 0.02,
+             f"{kpi_values[2]:.1%}", ha="center", va="bottom", fontsize=10, fontweight="bold")
+
+    ax1.set_ylim(0, 1.2)
+    ax1.set_title("Quality KPIs")
+    ax1.axhline(y=1.0, color="gray", linestyle="--", alpha=0.5)
+    ax1.set_ylabel("Score (1.0 = perfect)")
+
+    # Right panel: CQ pass/fail grid
+    cq_results = data.get("competency_queries", {}).get("queries", [])
+    if cq_results:
+        cq_names = [q["file"].replace(".rq", "").replace("_", "\n") for q in cq_results]
+        cq_pass = [1 if q["pass"] else 0 for q in cq_results]
+        cq_rows = [q.get("n_rows", 0) for q in cq_results]
+
+        colors_cq = ["#4CAF50" if p else "#E53935" for p in cq_pass]
+        y_pos = range(len(cq_names))
+        ax2.barh(y_pos, [1] * len(cq_names), color=colors_cq, edgecolor="white",
+                 linewidth=1.5)
+        ax2.set_yticks(list(y_pos))
+        ax2.set_yticklabels(cq_names, fontsize=8)
+        ax2.invert_yaxis()
+
+        for i, (passed, n_rows) in enumerate(zip(cq_pass, cq_rows)):
+            label = f"PASS ({n_rows} rows)" if passed else f"FAIL ({n_rows} rows)"
+            ax2.text(0.5, i, label, ha="center", va="center",
+                     fontsize=9, fontweight="bold", color="white")
+
+        ax2.set_xlim(0, 1)
+        ax2.set_xticks([])
+        ax2.set_title("Competency Queries")
+
+        # Summary
+        n_pass = sum(cq_pass)
+        n_total = len(cq_pass)
+        ax2.text(0.5, -0.08, f"Score: {n_pass}/{n_total}",
+                 transform=ax2.transAxes, ha="center", fontsize=11, fontweight="bold")
+
+    fig.suptitle("Ontology Quality Assurance Dashboard", y=1.01)
+    fig.tight_layout()
+
+    out = FIGURES_DIR / "ontology_qa_dashboard.png"
+    fig.savefig(out)
+    plt.close(fig)
+    print(f"  [Fig 9] {out}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 ALL_FIGURES = {
@@ -322,6 +639,9 @@ ALL_FIGURES = {
     4: ("Per-dyad F1 heatmap", fig4_per_dyad_heatmap),
     5: ("SemEval effect sizes", fig5_semeval_effect_sizes),
     6: ("Mapping comparison", fig6_mapping_comparison),
+    7: ("SemEval continuous correlation", fig7_semeval_continuous),
+    8: ("Incremental value", fig8_incremental_value),
+    9: ("Ontology QA dashboard", fig9_ontology_qa),
 }
 
 

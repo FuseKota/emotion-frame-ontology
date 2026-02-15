@@ -96,3 +96,31 @@ NS_PL = "http://example.org/efo/plutchik#"
 NS_EX = "http://example.org/data#"
 NS_FSCHEMA = "https://w3id.org/framester/schema/"
 NS_EMO = "http://www.ontologydesignpatterns.org/ont/emotions/EmoCore.owl#"
+
+# ---------------------------------------------------------------------------
+# Dyad → relevant SemEval-2018 EI-reg emotion(s) for consistency checks
+# (promoted from step4b_semeval_consistency.py)
+# ---------------------------------------------------------------------------
+DYAD_CONSISTENCY_MAP: Dict[str, List[str]] = {
+    "Love": ["joy"],
+    "Submission": ["fear"],
+    "Awe": ["fear"],
+    "Disapproval": ["sadness"],
+    "Remorse": ["sadness"],
+    "Contempt": ["anger"],
+    "Aggressiveness": ["anger"],
+    "Optimism": ["joy"],
+    "Hope": [],
+    "Pride": ["anger", "joy"],
+}
+
+# ---------------------------------------------------------------------------
+# Focus dyads: sufficient SemEval sample size for robust statistics
+# ---------------------------------------------------------------------------
+FOCUS_DYADS: List[str] = ["Love", "Disapproval", "Optimism", "Contempt"]
+
+# ---------------------------------------------------------------------------
+# Bootstrap / permutation parameters
+# ---------------------------------------------------------------------------
+N_BOOTSTRAP: int = 2000
+N_PERMUTATION: int = 10000

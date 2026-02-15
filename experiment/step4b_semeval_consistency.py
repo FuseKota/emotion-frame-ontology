@@ -29,7 +29,9 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 from scipy import stats
 
-from experiment.config import DATA_DIR, DYADS, OUTPUT_DIR, PLUTCHIK_EMOTIONS
+from experiment.config import (
+    DATA_DIR, DYAD_CONSISTENCY_MAP, DYADS, OUTPUT_DIR, PLUTCHIK_EMOTIONS,
+)
 from experiment.mappings.nrc_mapping import get_nrc_mapping
 from experiment.step2_map_plutchik import map_scores
 
@@ -46,19 +48,7 @@ SEMEVAL_TO_PLUTCHIK = {
     "sadness": "Sadness",
 }
 
-# Dyad → relevant SemEval emotion(s) for consistency checks
-DYAD_CONSISTENCY_MAP: Dict[str, List[str]] = {
-    "Love": ["joy"],
-    "Submission": ["fear"],
-    "Awe": ["fear"],
-    "Disapproval": ["sadness"],
-    "Remorse": ["sadness"],
-    "Contempt": ["anger"],
-    "Aggressiveness": ["anger"],
-    "Optimism": ["joy"],
-    "Hope": [],
-    "Pride": ["anger", "joy"],
-}
+# DYAD_CONSISTENCY_MAP is now imported from experiment.config
 
 
 def _load_semeval_data() -> Dict[str, List[Dict[str, Any]]]:

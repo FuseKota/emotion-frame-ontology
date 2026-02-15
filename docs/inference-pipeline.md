@@ -74,6 +74,9 @@ python scripts/run_inference.py --th 0.5 --out output/out.ttl
 |-----------|----------|------|
 | `--th` | `0.4` | 推論閾値 (両成分スコアがこの値以上で推論実行) |
 | `--out` | `output/out.ttl` | 出力ファイルパス |
+| `--data` | `data/sample.ttl` | データファイルパス（任意の TTL ファイルを指定可能） |
+
+`--data` オプションにより、GoEmotions 実験パイプラインで生成した大規模データ (`data/experiment/experiment_data.ttl`) に対しても推論を実行できる。このパターンは `threshold_sweep.py` の `--data` 引数と同一である。
 
 ### 2.3 ロードされるファイル
 
@@ -83,13 +86,15 @@ python scripts/run_inference.py --th 0.5 --out output/out.ttl
 |---------|------|------|
 | `data/EmoCore_iswc.ttl` | Yes | EmoCore モジュール |
 | `modules/EFO-PlutchikDyad.ttl` | Yes | PlutchikDyad モジュール |
-| `data/sample.ttl` | Yes | テストデータ |
+| `--data` で指定されたファイル | Yes | データファイル (デフォルト: `data/sample.ttl`) |
 | `data/BE_iswc.ttl` | No | Basic Emotions (あれば読み込み) |
 | `data/BasicEmotionTriggers_iswc.ttl` | No | トリガーパターン (あれば読み込み) |
 
 ### 2.4 セルフテスト
 
 推論実行後、期待結果との自動照合が行われる。6 つの状況すべてで期待結果と一致すれば `All tests PASSED!` と表示される。
+
+**注意**: `--data` オプションで `sample.ttl` 以外のファイルを指定した場合、セルフテストはスキップされる（期待結果がデフォルトデータに対してのみ定義されているため）。
 
 ---
 
@@ -208,3 +213,116 @@ python scripts/threshold_sweep.py --thresholds 0.2,0.3,0.4,0.5,0.6,0.7
 - **TH=0.6**: s3 (Anticipation=0.50) も不成立。高スコアの s1, s2 のみ残る。
 
 閾値を上げるほど推論数は減少するが、平均 dyadScore は上昇する（低スコアの推論がフィルタリングされるため）。TH=0.4 は精度と網羅性のバランスが取れた選択である。
+
+---
+
+## 6. GoEmotions 実験での大規模推論
+
+### 6.1 概要
+
+GoEmotions 実験パイプラインでは、2,000 件の Reddit コメントに対して Dyad 推論を適用した。テストデータ (6 件) と比較して約 333 倍のスケールでの検証である。
+
+### 6.2 実験パイプラインの推論フロー
+
+```
+GoEmotions (2,000 texts)
+  → SamLowe/roberta-base-go_emotions (28 スコア/テキスト)
+  → NRC EmoLex マッピング (8 Plutchik スコア, max 集約)
+  → step3_to_rdf.py (9,454 Evidence ノード, 41,816 トリプル)
+  → run_inference.py --data experiment_data.ttl (Dyad 推論)
+```
+
+### 6.3 閾値感度分析 (N=2,000)
+
+| TH | # Dyads | Macro-F1 | Micro-F1 |
+|----|---------|---------|---------|
+| 0.30 | 1,100 | 0.713 | 0.935 |
+| 0.35 | 1,020 | 0.763 | 0.972 |
+| **0.40** | **965** | **0.800** | **1.000** |
+| 0.45 | 898 | 0.714 | 0.964 |
+| 0.50 | 819 | 0.578 | 0.918 |
+
+**TH=0.35〜0.45** の範囲で Micro-F1 > 0.96 を維持し、閾値選択に対する頑健性が確認された。
+
+### 6.4 ゼロサポート Dyad の発見
+
+テストデータでは Aggressiveness (ex:s3) が正常に推論されるが、GoEmotions データでは **Awe と Aggressiveness がゼロ件**であった。共起分析により、これは分類器の出力分布における構造的な問題であることが判明した（詳細は [実験レポート](goemotion-experiment-report.md) セクション 7 を参照）。
+
+---
+
+## 7. 論文化拡張ステップ (Step 7–9)
+
+### 7.1 Step 7: SemEval-2018 連続評価
+
+Step 4b の二値評価を連続値に拡張し、構成概念妥当性を定量化する。
+
+```bash
+# 単独実行
+python -m experiment.step7_semeval_continuous [--batch-size 32]
+
+# パイプライン内 (step4b 後に自動実行)
+python -m experiment.run_pipeline --skip-download --skip-classify
+```
+
+**主指標**: Spearman ρ (dyadScore vs SemEval intensity) + Bootstrap 95% CI
+**補助指標**: PR-AUC (t ∈ {0.25, 0.5, 0.75})
+**多重検定補正**: Holm-Bonferroni
+**出力**: `output/experiment/semeval_continuous.json`
+**キャッシュ**: `data/experiment/semeval_plutchik_cache.jsonl` (分類結果)
+
+### 7.2 Step 8: 増分価値検証
+
+dyadScore が成分スコア (comp1, comp2) を超える追加の説明力を持つことを示す。
+
+```bash
+# 単独実行 (Step 7 のキャッシュが必要)
+python -m experiment.step8_incremental_value
+
+# パイプライン内 (step7 後に自動実行)
+```
+
+**主指標**: 偏相関 (comp1, comp2 制御) + permutation 検定 (n=10,000)
+**補助指標**: OLS 3 モデル比較 (comp のみ / +dyadScore / +comp1*comp2), ΔR², F 検定, VIF
+**出力**: `output/experiment/incremental_value.json`
+
+### 7.3 Step 9: オントロジー品質保証 (SHACL/CQ KPI)
+
+推論の再現性・説明性を KPI として定量報告する。
+
+```bash
+# 単独実行
+python -m experiment.step9_ontology_qa [--inference]
+
+# パイプライン内 (step3b 後に自動実行)
+```
+
+**SHACL KPI**: conforms, violations/1K triples, warnings
+**CQ KPI**: 7 クエリの pass/fail, 特に missing_provenance=0, score_reconstruction=0
+**追加 KPI**: derivedFrom 完備率, score soundness (dyadScore ≤ min(comp1, comp2))
+**出力**: `output/experiment/ontology_qa.json`
+
+### 7.4 可視化 (Fig 7–9)
+
+```bash
+# Fig 7–9 のみ生成
+python -m experiment.step6_visualize --only 7 8 9
+
+# 全 Figure 生成
+python -m experiment.step6_visualize
+```
+
+| Fig | ファイル名 | 内容 |
+|-----|----------|------|
+| Fig 7 | `semeval_continuous_correlation.png` | dyadScore vs SemEval intensity 散布図 (2×2: 焦点 4 Dyad) |
+| Fig 8 | `incremental_value.png` | R² 比較 (3 モデル) + 偏相関バー |
+| Fig 9 | `ontology_qa_dashboard.png` | KPI サマリ + CQ pass/fail グリッド |
+
+### 7.5 パイプラインスキップフラグ
+
+| フラグ | 効果 |
+|--------|------|
+| `--skip-step7` | Step 7 (SemEval 連続評価) をスキップ |
+| `--skip-step8` | Step 8 (増分価値) をスキップ |
+| `--skip-step9` | Step 9 (オントロジー QA) をスキップ |
+
+Step 8 は Step 7 のキャッシュに依存するため、`--skip-step7` を指定すると Step 8 も自動スキップされる。

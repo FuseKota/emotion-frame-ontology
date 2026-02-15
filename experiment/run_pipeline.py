@@ -47,6 +47,12 @@ def main():
                         help="Skip Step 3b (RDF-based inference via run_inference.py)")
     parser.add_argument("--skip-semeval", action="store_true",
                         help="Skip Step 4b (SemEval consistency)")
+    parser.add_argument("--skip-step7", action="store_true",
+                        help="Skip Step 7 (SemEval continuous evaluation)")
+    parser.add_argument("--skip-step8", action="store_true",
+                        help="Skip Step 8 (incremental value)")
+    parser.add_argument("--skip-step9", action="store_true",
+                        help="Skip Step 9 (ontology QA)")
     args = parser.parse_args()
 
     t0 = time.time()
@@ -128,6 +134,27 @@ def main():
     _check_output(OUTPUT_DIR / "mapping_comparison.json", "Step 5")
     print()
 
+    # -- Step 7: SemEval continuous evaluation ---------------------------
+    if not args.skip_step7 and not args.skip_semeval:
+        from experiment.step7_semeval_continuous import main as step7
+        step7(batch_size=args.batch_size)
+        _check_output(OUTPUT_DIR / "semeval_continuous.json", "Step 7")
+        print()
+
+    # -- Step 8: Incremental value (depends on Step 7 cache) -------------
+    if not args.skip_step8 and not args.skip_step7 and not args.skip_semeval:
+        from experiment.step8_incremental_value import main as step8
+        step8()
+        _check_output(OUTPUT_DIR / "incremental_value.json", "Step 8")
+        print()
+
+    # -- Step 9: Ontology QA (depends on Step 3b inference_out.ttl) ------
+    if not args.skip_step9:
+        from experiment.step9_ontology_qa import main as step9
+        step9()
+        _check_output(OUTPUT_DIR / "ontology_qa.json", "Step 9")
+        print()
+
     # -- Step 6: Visualize ----------------------------------------------
     from experiment.step6_visualize import main as step6
     step6()
@@ -140,6 +167,12 @@ def main():
     print(f"  CSV:     {OUTPUT_DIR / 'threshold_sweep_results.csv'}")
     if not args.skip_semeval:
         print(f"  SemEval: {OUTPUT_DIR / 'semeval_consistency.json'}")
+    if not args.skip_step7:
+        print(f"  SemEval (continuous): {OUTPUT_DIR / 'semeval_continuous.json'}")
+    if not args.skip_step8:
+        print(f"  Incremental value:   {OUTPUT_DIR / 'incremental_value.json'}")
+    if not args.skip_step9:
+        print(f"  Ontology QA:         {OUTPUT_DIR / 'ontology_qa.json'}")
     print(f"  Figures: {OUTPUT_DIR / 'figures/'}")
     print("=" * 60)
 

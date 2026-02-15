@@ -1,0 +1,6 @@
+# EFO core files — READ-ONLY (De Giorgis & Gangemi 2024 / DOLCE-Ultralite)
+# These must not be modified. See scripts/check_efo_core.sh for integrity checks.
+data/EmoCore_iswc.ttl -diff merge=ours
+data/BE_iswc.ttl -diff merge=ours
+data/BasicEmotionTriggers_iswc.ttl -diff merge=ours
+imports/DUL.owl -diff merge=ours
