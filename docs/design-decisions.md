@@ -1,5 +1,7 @@
 # 設計判断の記録
 
+> **作成日**: 2026-02-09 | **最終更新日**: 2026-02-09
+
 本ドキュメントでは、EFO-PlutchikDyad 再現プロジェクトにおける主要な設計判断とその根拠を記録する。
 
 ---
@@ -152,28 +154,96 @@ SPARQL CONSTRUCT ルール内の閾値は `0.4` にハードコードされて�
 
 ---
 
-## 7. 既知の制限事項
+## 7. GoEmotions 実験パイプラインの設計判断
 
-### 7.1 サンプルデータの規模
+### 7.1 28→8 マッピング: NRC EmoLex の採用
 
-`sample.ttl` は 6 状況のみを含む小規模なテストデータである。実際の感情分析パイプラインからの大規模データでの検証は未実施。
+#### 判断
 
-### 7.2 Dyad のカバレッジ
+GoEmotions の 28 感情ラベルから Plutchik の 8 基本感情へのマッピングに NRC Emotion Lexicon (Mohammad & Turney, 2013) を採用し、手作業マッピングをフォールバックとして用意する。
+
+#### 根拠
+
+- NRC EmoLex は Plutchik の 8 感情に直接対応する語彙レベルのアノテーションを持つ
+- 学術的根拠があり、マッピングの恣意性を軽減できる
+- 手作業マッピング (Approach B) は GoEmotions ラベルが NRC に未収録の場合のフォールバック
+
+#### 結果
+
+NRC マッピングは Handcrafted の **12 倍** の Dyad を検出 (965 vs 79)。主因は Trust と Anticipation のカバレッジ差 (各 3.0x, 3.7x)。
+
+### 7.2 集約関数: max の採用
+
+#### 判断
+
+複数の GoEmotions ラベルが同一 Plutchik 感情にマッピングされる場合、`max` 集約を採用する。
+
+#### 代替案の検討
+
+| 集約 | 特性 | 不採用理由 |
+|------|------|-----------|
+| `sum` + 正規化 | 複数の弱いシグナルを捉えられる | Joy 等にマッピングされるラベル数が多い感情のスコアがインフレする |
+| `mean` | 均等重み付け | ノイズに弱く、多ラベルマッピング時にスコアが希釈される |
+| **`max`** | **最も強いシグナルを採用** | **ラベル数の不均衡に頑健。Plutchik スコアの上限が [0,1] に自然に収まる** |
+
+### 7.3 GoEmotions `disapproval` のマッピング
+
+#### 判断
+
+GoEmotions の `disapproval` ラベルを Plutchik の **Anger と Sadness の両方** にマッピングする。
+
+#### 根拠
+
+- GoEmotions の `disapproval` は「不承認」を意味し、否定的判断 (Anger 系) と失望 (Sadness 系) の両要素を含む
+- NRC EmoLex でも anger と sadness の両方に関連する
+- **注意**: Plutchik Dyad の "Disapproval" (Surprise + Sadness) とは名前は同じだが意味が異なる。GoEmotions ラベルは Surprise 成分を含まない
+
+### 7.4 Silver ラベル設計
+
+#### 判断
+
+評価用の擬似正解 (Silver) ラベルを `run_inference.py:infer_dyads()` と同一のロジック（両コンポーネント >= TH）で生成する。
+
+#### 根拠
+
+- 完全な Dyad 正解ラベル付きデータセットは存在しない
+- Silver ラベルは推論定義と整合的であり、「推論ルールが安定に動作するか」を検証できる
+- 自己参照的な循環を認識した上で、以下の補完策を採用:
+  - **Cross-threshold 分析**: Silver(TH_s) vs Prediction(TH_p) で TH_s ≠ TH_p の場合を評価
+  - **SemEval-2018 外部検証**: 独立データセットでの整合性を Spearman 相関で確認
+
+---
+
+## 8. 既知の制限事項
+
+### 8.1 コアモジュールのテストデータ規模
+
+`sample.ttl` は 6 状況のみを含む小規模なテストデータである。GoEmotions 実験パイプラインにより 2,000 件の実テキストデータでの検証を実施済み。
+
+### 8.2 Dyad のカバレッジ
 
 Plutchik の理論では Secondary Dyad (1 つ隣を飛ばした組み合わせ) と Tertiary Dyad (2 つ隣を飛ばした組み合わせ) が定義されるが、本モジュールでは Primary Dyad 8 つと Secondary Dyad 2 つ (Hope, Pride) の計 10 Dyad のみを実装している。
 
-### 7.3 OWL DL 推論との非統合
+### 8.3 OWL DL 推論との非統合
 
 `owl:equivalentClass` による Dyad 定義 (OWL restriction パターン) は、DL 推論器 (HermiT, Pellet) での自動分類を意図して記述されている。しかし、本プロジェクトの推論パイプラインは Python/SPARQL ベースであり、DL 推論器との統合テストは未実施。
 
-### 7.4 名前空間の暫定性
+### 8.4 名前空間の暫定性
 
 `http://example.org/efo/plutchik#` は暫定的な名前空間である。正式な公開時には永続的な IRI (例: W3ID) に移行する必要がある。
 
-### 7.5 EmoCore の owl:imports 修正
+### 8.5 EmoCore の owl:imports 修正
 
 `data/EmoCore_iswc.ttl` は Protege での作業により `owl:imports` に `sample.ttl` や推論出力のローカルパスが含まれている。これは本プロジェクトのローカル環境固有の問題であり、配布時には除去が必要。
 
-### 7.6 スコアの数値精度
+### 8.6 スコアの数値精度
 
 `xsd:decimal` 型を使用しているが、Python の `Decimal` 型との変換時に浮動小数点の精度問題が生じる可能性がある。閾値感度分析の `mean_dyad_score` 列で微小な丸め誤差が観測されている (例: 0.6499999... ≈ 0.65)。
+
+### 8.7 Awe / Aggressiveness のゼロサポート
+
+GoEmotions 実験において、Awe (Fear+Surprise) と Aggressiveness (Anger+Anticipation) は全 2,000 サンプルでゼロ件であった。個々のコンポーネントスコアは閾値を超えるサンプルが存在する（Fear: 38 件、Surprise: 193 件、Anger: 236 件、Anticipation: 256 件）が、両方が同時に閾値を超えるケースが存在しない。これは分類器の出力分布の構造的問題であり、サンプル数の増加では解決できない。
+
+### 8.8 Silver ラベルの自己参照性
+
+Silver ラベルは推論ルールと同一のロジックで生成されるため、同一閾値での Score-Aware baseline は定義上 Micro-F1 = 1.0 となる。この循環を補完するため、Cross-threshold 分析と SemEval-2018 外部検証を併用している。

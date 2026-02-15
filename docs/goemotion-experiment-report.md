@@ -1,5 +1,7 @@
 # GoEmotions Dyad Inference Experiment Report
 
+> **作成日**: 2026-02-15 | **最終更新日**: 2026-02-15
+
 ## Overview
 
 This report presents the results of evaluating the EFO-PlutchikDyad module's

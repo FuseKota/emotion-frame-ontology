@@ -1,5 +1,7 @@
 # 先行研究: EFO: the Emotion Frame Ontology
 
+> **作成日**: 2026-02-09 | **最終更新日**: 2026-02-09
+
 > De Giorgis, S., & Gangemi, A. (2024). **EFO: the Emotion Frame Ontology**. arXiv:2401.10751
 > https://arxiv.org/abs/2401.10751
 > ライセンス: Creative Commons BY 4.0

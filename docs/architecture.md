@@ -1,5 +1,7 @@
 # システムアーキテクチャ
 
+> **作成日**: 2026-02-09 | **最終更新日**: 2026-02-09
+
 本ドキュメントでは、EFO-PlutchikDyad 再現プロジェクトのオントロジー構成、名前空間、クラス階層、プロパティ構造、およびデータフローを記述する。
 
 ---
@@ -109,6 +111,8 @@ pl:Evidence
 
 ## 5. データフロー
 
+### 5.1 コア推論パイプライン
+
 ```
 [入力データ]                [推論]                    [出力・検証]
 
@@ -126,7 +130,28 @@ modules/EFO-          ─┘    (min-threshold          │
                                                            (閾値感度分析)
 ```
 
-### 処理の流れ
+### 5.2 GoEmotions 実験パイプライン
+
+```
+[データ取得]          [NLP 分類]         [マッピング]         [RDF 変換]
+GoEmotions ──→  roberta-base  ──→  NRC EmoLex  ──→  RDF (Turtle)
+(N=2000)        (28 スコア)        (8 Plutchik)      (FrameOccurrence
+step0                step1              step2           + Evidence)
+                                                          step3
+                                                            │
+                     [評価]               [推論]             │
+               ┌─ step4_evaluate  ←── run_inference.py ←────┘
+               │   (Silver + Baselines    (--data 引数)
+               │    + Metrics)
+               │
+               ├─ step4b (SemEval-2018 整合性)
+               ├─ step5 (NRC vs Handcrafted 比較)
+               └─ step6 (図表生成)
+```
+
+### 5.3 処理の流れ
+
+**コアパイプライン:**
 
 1. **入力**: `sample.ttl` (6 つの FrameOccurrence + 各 2 つの Evidence) と オントロジーモジュールをロード
 2. **推論**: `run_inference.py` が min-threshold アルゴリズムで DyadEvidence を生成し、`pl:satisfies` トリプルを追加
@@ -136,15 +161,46 @@ modules/EFO-          ─┘    (min-threshold          │
    - `sparql/cq/`: コンピテンシー質問による意味的検証
    - `threshold_sweep.py`: 閾値パラメータの感度分析
 
+**実験パイプライン:**
+
+1. **データ取得** (step0): GoEmotions から 2,000 件の Reddit コメントをサンプリング
+2. **NLP 分類** (step1): `SamLowe/roberta-base-go_emotions` で 28 感情スコアを取得
+3. **マッピング** (step2): NRC EmoLex を用いて 28 → 8 Plutchik 感情に変換 (max 集約)
+4. **RDF 変換** (step3): 8 スコアを FrameOccurrence + Evidence の Turtle 形式に変換 (41,816 トリプル)
+5. **推論** (step3b): `run_inference.py --data` で Dyad を推論
+6. **評価** (step4): Silver ラベル + 3 Baselines で Macro-F1/Micro-F1 を算出
+7. **クロスドメイン検証** (step4b): SemEval-2018 EI-reg との整合性を Spearman 相関で確認
+8. **比較分析** (step5): NRC vs Handcrafted マッピングの検出差を分析
+9. **可視化** (step6): 6 枚の図表を生成
+
 ### ディレクトリ構成（プロジェクト全体）
 
 ```
-efo_repro/
+emotion-frame-ontology/
 ├── data/
 │   ├── EmoCore_iswc.ttl              # EmoCore モジュール
 │   ├── BE_iswc.ttl                   # Basic Emotions モジュール
 │   ├── BasicEmotionTriggers_iswc.ttl # トリガーパターン
-│   └── sample.ttl                    # テストデータ (6 状況)
+│   ├── sample.ttl                    # テストデータ (6 状況)
+│   └── experiment/                   # GoEmotions 実験データ (生成物)
+│       ├── goemotion_subset.csv      # サブセット (N=2000)
+│       ├── classified_scores.jsonl   # 28 感情スコア
+│       ├── plutchik_scores.jsonl     # 8 Plutchik スコア
+│       └── experiment_data.ttl       # RDF 形式 (41,816 トリプル)
+├── experiment/                       # GoEmotions 評価パイプライン
+│   ├── config.py                     # 共通定数 (DYADS, ラベル)
+│   ├── step0_download_data.py        # データ取得
+│   ├── step1_classify.py             # HuggingFace 分類
+│   ├── step2_map_plutchik.py         # 28→8 マッピング
+│   ├── step3_to_rdf.py               # RDF 変換
+│   ├── step4_evaluate.py             # 評価
+│   ├── step4b_semeval_consistency.py  # SemEval 整合性
+│   ├── step5_compare_mappings.py     # マッピング比較
+│   ├── step6_visualize.py            # 図表生成
+│   ├── run_pipeline.py               # オーケストレータ
+│   └── mappings/                     # マッピング定義
+│       ├── goemotion_to_plutchik.json
+│       └── nrc_mapping.py
 ├── imports/
 │   ├── DUL.owl                       # DOLCE-Ultralite
 │   └── catalog-v001.xml              # Protege IRI 解決
@@ -152,7 +208,13 @@ efo_repro/
 │   └── EFO-PlutchikDyad.ttl          # Plutchik Dyad 拡張モジュール
 ├── output/
 │   ├── out.ttl                       # 推論出力 (生成物)
-│   └── threshold_sensitivity.csv     # 閾値分析結果 (生成物)
+│   ├── threshold_sensitivity.csv     # 閾値分析結果 (生成物)
+│   └── experiment/                   # 実験結果 (生成物)
+│       ├── evaluation_report.json
+│       ├── threshold_sweep_results.csv
+│       ├── semeval_consistency.json
+│       ├── mapping_comparison.json
+│       └── figures/                  # 6 PNG 図表
 ├── scripts/
 │   ├── run_inference.py              # Dyad 推論スクリプト
 │   ├── threshold_sweep.py            # 閾値感度分析
