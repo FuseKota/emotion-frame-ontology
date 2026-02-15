@@ -630,6 +630,162 @@ def fig9_ontology_qa():
 
 
 # ---------------------------------------------------------------------------
+# Figure 10: Aggregation function comparison (Paper Fig 5)
+# ---------------------------------------------------------------------------
+def fig10_aggregation_comparison():
+    """Left: Spearman rho heatmap (7 agg x 4 dyads). Right: best vs min scatter."""
+    from scipy import stats as sp_stats
+
+    agg_file = OUTPUT_DIR / "aggregation_study.json"
+    if not agg_file.exists():
+        print("  [Fig 10] Skipped (run step10_aggregation_study first)")
+        return
+
+    with open(agg_file) as f:
+        data = json.load(f)
+
+    agg_names = data["aggregation_functions"]
+    focus_dyads = data["focus_dyads"]
+    matrix = data["comparison_matrix"]
+
+    # --- Left panel: heatmap ---
+    rho_matrix = []
+    for agg_name in agg_names:
+        row = [matrix.get(agg_name, {}).get(d, float("nan")) for d in focus_dyads]
+        rho_matrix.append(row)
+    rho_matrix = np.array(rho_matrix)
+
+    # Display labels
+    agg_display = {
+        "min": "Min (baseline)",
+        "product": "Product",
+        "geometric_mean": "Geometric Mean",
+        "harmonic_mean": "Harmonic Mean",
+        "lukasiewicz": "Lukasiewicz",
+        "power_mean_neg2": "Power Mean (p=-2)",
+        "owa_0.3_0.7": "OWA (0.3/0.7)",
+    }
+    agg_labels = [agg_display.get(a, a) for a in agg_names]
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5),
+                                     gridspec_kw={"width_ratios": [3, 2]})
+
+    im = ax1.imshow(rho_matrix, aspect="auto", cmap="RdYlGn",
+                     vmin=min(np.nanmin(rho_matrix), -0.1),
+                     vmax=max(np.nanmax(rho_matrix), 0.5))
+
+    ax1.set_xticks(range(len(focus_dyads)))
+    ax1.set_xticklabels(focus_dyads, fontsize=10)
+    ax1.set_yticks(range(len(agg_labels)))
+    ax1.set_yticklabels(agg_labels, fontsize=9)
+    ax1.set_title("Spearman rho by Aggregation Function")
+
+    # Annotate cells
+    for i in range(len(agg_labels)):
+        for j in range(len(focus_dyads)):
+            val = rho_matrix[i, j]
+            if np.isnan(val):
+                txt = "N/A"
+            else:
+                txt = f"{val:+.3f}"
+            color = "white" if (not np.isnan(val) and val < 0.1) else "black"
+            ax1.text(j, i, txt, ha="center", va="center",
+                     fontsize=9, color=color, fontweight="bold")
+
+    # Highlight baseline row
+    ax1.axhline(y=0.5, color="gray", linestyle="--", alpha=0.3)
+
+    fig.colorbar(im, ax=ax1, label="Spearman rho", shrink=0.8)
+
+    # --- Right panel: best vs min scatter for dyad with largest improvement ---
+    best_info = data.get("best_per_dyad", {})
+    # Find dyad with largest improvement
+    best_dyad = None
+    best_improvement = -float("inf")
+    for dyad, info in best_info.items():
+        imp = info.get("improvement")
+        if imp is not None and imp > best_improvement:
+            best_improvement = imp
+            best_dyad = dyad
+
+    if best_dyad is None:
+        ax2.text(0.5, 0.5, "No improvement found", ha="center", va="center",
+                 transform=ax2.transAxes, fontsize=12)
+    else:
+        best_agg = best_info[best_dyad]["best_aggregation"]
+        semeval_emo = DYAD_CONSISTENCY_MAP.get(best_dyad, [""])[0]
+
+        # Load raw data for scatter
+        plutchik_cache = DATA_DIR / "semeval_plutchik_cache.jsonl"
+        if plutchik_cache.exists():
+            text_to_plutchik: Dict[str, Dict[str, float]] = {}
+            with open(plutchik_cache, encoding="utf-8") as f:
+                for line in f:
+                    rec = json.loads(line)
+                    text_to_plutchik[rec["text"]] = rec["plutchik_scores"]
+
+            semeval_cache = DATA_DIR / "semeval_cache"
+            text_to_intensity: Dict[str, float] = {}
+            cache_path = semeval_cache / f"semeval_ei_reg_{semeval_emo}.jsonl"
+            if cache_path.exists():
+                with open(cache_path, encoding="utf-8") as f:
+                    for line in f:
+                        rec = json.loads(line)
+                        text_to_intensity[rec["text"]] = rec["intensity"]
+
+            e1, e2 = DYADS[best_dyad]
+            from experiment.step10_aggregation_study import AGGREGATION_FUNCTIONS
+            best_fn = AGGREGATION_FUNCTIONS[best_agg]
+
+            min_scores, best_scores, intensities = [], [], []
+            for text, plutchik in text_to_plutchik.items():
+                intensity = text_to_intensity.get(text)
+                if intensity is None:
+                    continue
+                c1 = plutchik.get(e1, 0.0)
+                c2 = plutchik.get(e2, 0.0)
+                min_scores.append(min(c1, c2))
+                best_scores.append(float(best_fn(
+                    np.array([c1]), np.array([c2])
+                )[0]))
+                intensities.append(intensity)
+
+            min_arr = np.array(min_scores)
+            best_arr = np.array(best_scores)
+            int_arr = np.array(intensities)
+
+            # Scatter: best agg vs min
+            ax2.scatter(min_arr, best_arr, alpha=0.15, s=6, c=int_arr,
+                        cmap="coolwarm", edgecolors="none")
+            ax2.plot([0, 1], [0, 1], "k--", alpha=0.3, linewidth=1)
+            ax2.set_xlabel(f"Min dyadScore ({best_dyad})")
+            ax2.set_ylabel(f"{agg_display.get(best_agg, best_agg)} dyadScore")
+            ax2.set_title(
+                f"{best_dyad}: {agg_display.get(best_agg, best_agg)} vs Min\n"
+                f"(delta rho = {best_improvement:+.4f})"
+            )
+            ax2.set_xlim(-0.02, max(min_arr.max(), best_arr.max()) * 1.1 + 0.02)
+            ax2.set_ylim(-0.02, max(min_arr.max(), best_arr.max()) * 1.1 + 0.02)
+            ax2.set_aspect("equal")
+            ax2.grid(True, alpha=0.2)
+
+            # Color bar for intensity
+            sm = plt.cm.ScalarMappable(cmap="coolwarm",
+                                        norm=plt.Normalize(vmin=0, vmax=1))
+            sm.set_array([])
+            fig.colorbar(sm, ax=ax2, label=f"SemEval intensity ({semeval_emo})",
+                         shrink=0.8)
+
+    fig.suptitle("Aggregation Function Comparison Study", y=1.01)
+    fig.tight_layout()
+
+    out = FIGURES_DIR / "aggregation_comparison.png"
+    fig.savefig(out)
+    plt.close(fig)
+    print(f"  [Fig 10] {out}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 ALL_FIGURES = {
@@ -642,6 +798,7 @@ ALL_FIGURES = {
     7: ("SemEval continuous correlation", fig7_semeval_continuous),
     8: ("Incremental value", fig8_incremental_value),
     9: ("Ontology QA dashboard", fig9_ontology_qa),
+    10: ("Aggregation comparison", fig10_aggregation_comparison),
 }
 
 

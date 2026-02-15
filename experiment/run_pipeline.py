@@ -53,6 +53,8 @@ def main():
                         help="Skip Step 8 (incremental value)")
     parser.add_argument("--skip-step9", action="store_true",
                         help="Skip Step 9 (ontology QA)")
+    parser.add_argument("--skip-step10", action="store_true",
+                        help="Skip Step 10 (aggregation study)")
     args = parser.parse_args()
 
     t0 = time.time()
@@ -155,6 +157,13 @@ def main():
         _check_output(OUTPUT_DIR / "ontology_qa.json", "Step 9")
         print()
 
+    # -- Step 10: Aggregation study (depends on Step 7 cache) -------------
+    if not args.skip_step10 and not args.skip_step7 and not args.skip_semeval:
+        from experiment.step10_aggregation_study import main as step10
+        step10()
+        _check_output(OUTPUT_DIR / "aggregation_study.json", "Step 10")
+        print()
+
     # -- Step 6: Visualize ----------------------------------------------
     from experiment.step6_visualize import main as step6
     step6()
@@ -173,6 +182,8 @@ def main():
         print(f"  Incremental value:   {OUTPUT_DIR / 'incremental_value.json'}")
     if not args.skip_step9:
         print(f"  Ontology QA:         {OUTPUT_DIR / 'ontology_qa.json'}")
+    if not args.skip_step10:
+        print(f"  Aggregation study:   {OUTPUT_DIR / 'aggregation_study.json'}")
     print(f"  Figures: {OUTPUT_DIR / 'figures/'}")
     print("=" * 60)
 
