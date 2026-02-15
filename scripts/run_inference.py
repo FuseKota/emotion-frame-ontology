@@ -40,8 +40,18 @@ DYADS: Dict[str, Tuple[str, str]] = {
 }
 
 
-def load_graph(base_dir: Path) -> Graph:
-    """Load all required TTL files into a single graph."""
+def load_graph(base_dir: Path, data_file: Optional[str] = None) -> Graph:
+    """Load all required TTL files into a single graph.
+
+    Parameters
+    ----------
+    base_dir : Path
+        Repository root directory.
+    data_file : str, optional
+        Path to an alternative data file.  When *None* (default) the
+        bundled ``data/sample.ttl`` is used, preserving backward
+        compatibility.
+    """
     g = Graph()
 
     # Bind namespaces
@@ -53,11 +63,19 @@ def load_graph(base_dir: Path) -> Graph:
     g.bind("rdfs", RDFS)
     g.bind("xsd", XSD)
 
+    # Resolve data file path
+    if data_file:
+        data_path = Path(data_file)
+        if not data_path.is_absolute():
+            data_path = base_dir / data_file
+    else:
+        data_path = base_dir / "data" / "sample.ttl"
+
     # Required files
     required_files = [
         base_dir / "data" / "EmoCore_iswc.ttl",
         base_dir / "modules" / "EFO-PlutchikDyad.ttl",
-        base_dir / "data" / "sample.ttl",
+        data_path,
     ]
 
     for f in required_files:
@@ -273,6 +291,8 @@ def main():
     parser = argparse.ArgumentParser(description="Plutchik Dyad Inference")
     parser.add_argument("--th", type=float, default=0.4, help="Threshold (default: 0.4)")
     parser.add_argument("--out", type=str, default="output/out.ttl", help="Output file path")
+    parser.add_argument("--data", type=str, default=None,
+                        help="Path to data file (default: data/sample.ttl)")
     args = parser.parse_args()
 
     threshold = Decimal(str(args.th))
@@ -284,10 +304,12 @@ def main():
     print(f"Plutchik Dyad Inference")
     print(f"Threshold: {threshold}")
     print(f"Base directory: {base_dir}")
+    if args.data:
+        print(f"Data file: {args.data}")
     print("-" * 50)
 
     # Load graph
-    g = load_graph(base_dir)
+    g = load_graph(base_dir, data_file=args.data)
 
     # Run inference
     results = run_inference(g, threshold)
@@ -305,9 +327,10 @@ def main():
     g.serialize(destination=str(out_path), format="turtle")
     print(f"Output written: {len(g)} triples")
 
-    # Self-test
-    if not run_self_test(results):
-        sys.exit(1)
+    # Self-test only when using default sample data (expected values differ for experiment data)
+    if args.data is None:
+        if not run_self_test(results):
+            sys.exit(1)
 
     print("\nDone!")
 

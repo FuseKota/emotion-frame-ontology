@@ -1,0 +1,9 @@
+# Experiment intermediate data
+data/experiment/
+output/experiment/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
