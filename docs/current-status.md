@@ -2,7 +2,7 @@
 
 > **作成日**: 2026-02-15 | **最終更新日**: 2026-02-16
 
-**ブランチ**: `experiment` (最新コミット: `fd64c3d`)
+**ブランチ**: `experiment` (最新コミット: `1c616dc`)
 
 ---
 
@@ -37,7 +37,7 @@ SemEval-2018 の外部感情強度データとの相関分析によって妥当�
 | 4 | Silver ラベル評価 | **完了** | `output/experiment/evaluation_report.json` |
 | 4b | SemEval 二値一致性評価 | **完了** | `output/experiment/semeval_consistency.json` |
 | 5 | NRC vs Handcrafted 比較 | **完了** | `output/experiment/mapping_comparison.json` |
-| 6 | 可視化 (9 図) | **完了** | `output/experiment/figures/*.png` |
+| 6 | 可視化 (10 図) | **完了** | `output/experiment/figures/*.png` |
 | **7** | **SemEval 連続評価** | **完了** | `output/experiment/semeval_continuous.json` |
 | **8** | **増分価値検証** | **完了** | `output/experiment/incremental_value.json` |
 | **9** | **オントロジー QA** | **完了** | `output/experiment/ontology_qa.json` |
@@ -394,11 +394,12 @@ bash scripts/check_efo_core.sh
 
 | タスク | 優先度 | 備考 |
 |--------|--------|------|
-| Table 1–4 の LaTeX 整形 | 高 | JSON データから生成可能 |
-| Fig 1–4 の論文用整形 | 高 | 現在の Fig 7–9 をリネーム・調整 |
+| Table 1–5 の LaTeX 整形 | 高 | JSON データから生成可能 |
+| Fig 1–5 の論文用整形 | 高 | 現在の Fig 7–10 をリネーム・調整 |
 | Fig 3 の統合 (分布 + 共起) | 中 | Fig 2 + Fig 3 を 1 図に統合 |
 | Related Work 執筆 | 高 | Plutchik, GoEmotions, SemEval, EFO |
-| Discussion 執筆 | 高 | Silver 自己参照、ゼロサポート、rare dyad |
+| Discussion 執筆 | 高 | Silver 自己参照、ゼロサポート、rare dyad、集約関数選択 |
+| Ablation Study 執筆 | 高 | Step 10 の結果から min() vs OWA のトレードオフ議論 |
 
 ### 9.2 将来課題 (論文に記載するが実装不要)
 
@@ -406,6 +407,7 @@ bash scripts/check_efo_core.sh
 - **Gold ラベル**: 人手アノテーションによる外部正解の作成
 - **マルチモーダル拡張**: テキスト以外 (音声, 表情) への応用
 - **Tertiary Dyad**: 現在の 10 Dyad → 全 Dyad カバレッジへの拡張
+- **OWA 重みの最適化**: 0.3/0.7 以外のパラメータ探索、Dyad ごとの適応的選択
 
 ---
 
@@ -417,8 +419,8 @@ bash scripts/check_efo_core.sh
 | `torch` | モデル推論 | 1, 4b, 7 |
 | `rdflib` | RDF/SPARQL | 3, 3b, 9 |
 | `pyshacl` | SHACL 検証 | 9 |
-| `scipy` | 統計検定 (Spearman, permutation) | 4b, 7, 8 |
-| `scikit-learn` | PR-AUC | 7 |
+| `scipy` | 統計検定 (Spearman, permutation) | 4b, 7, 8, 10 |
+| `scikit-learn` | PR-AUC | 7, 10 |
 | `statsmodels` | (OLS VIF — 現在は numpy で自前実装) | — |
 | `matplotlib` | 可視化 | 6 |
 | `numpy` | 数値計算 | 全般 |
@@ -430,6 +432,8 @@ bash scripts/check_efo_core.sh
 
 | Hash | メッセージ |
 |------|---------|
+| `1c616dc` | Add aggregation function comparison study (Step 10) |
+| `d44e3b1` | Add current status report and dates to all docs |
 | `fd64c3d` | Add construct validity evaluation pipeline (steps 7-9) for paper |
 | `f4f4536` | Add GoEmotions experiment pipeline with evaluation and visualization |
 | `68c2f03` | Add docs/ directory with architecture, inference, validation, design, and paper summary |
